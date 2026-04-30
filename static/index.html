@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NextFlex Project Portal</title>
+<link rel="stylesheet" href="/static/style.css">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<!-- ─── HEADER ─── -->
+<header class="header">
+  <div class="header-inner">
+    <div class="brand">
+      <div class="brand-mark">NF</div>
+      <div>
+        <h1>NextFlex Project Portal</h1>
+        <p class="subtitle">Browse, search, and analyze Project Calls 1.0 – 10.0</p>
+      </div>
+    </div>
+    <nav class="header-nav">
+      <button class="nav-btn active" data-view="dashboard">Dashboard</button>
+      <button class="nav-btn" data-view="projects">Projects</button>
+      <button class="nav-btn" data-view="institutions">Institutions</button>
+      <button class="nav-btn" data-view="search">Search</button>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+
+  <!-- ─── DASHBOARD VIEW ─── -->
+  <section id="view-dashboard" class="view active">
+    <div class="stat-grid" id="statGrid">
+      <div class="stat-card"><div class="stat-label">Total projects</div><div class="stat-value" id="statTotal">—</div></div>
+      <div class="stat-card"><div class="stat-label">Total funding</div><div class="stat-value" id="statFunding">—</div></div>
+      <div class="stat-card"><div class="stat-label">Project calls</div><div class="stat-value" id="statPCs">—</div></div>
+      <div class="stat-card"><div class="stat-label">Institutions</div><div class="stat-value" id="statInst">—</div></div>
+      <div class="stat-card"><div class="stat-label">Focus areas</div><div class="stat-value" id="statFocus">—</div></div>
+    </div>
+
+    <div class="grid2">
+      <div class="panel">
+        <h2>Projects by Project Call</h2>
+        <div id="pcList" class="pc-list"></div>
+      </div>
+      <div class="panel">
+        <h2>Top focus areas</h2>
+        <div id="focusList" class="focus-list"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── PROJECTS VIEW ─── -->
+  <section id="view-projects" class="view">
+    <div class="filter-bar">
+      <select id="filterPC">
+        <option value="">All Project Calls</option>
+      </select>
+      <select id="filterFocus">
+        <option value="">All Focus Areas</option>
+      </select>
+      <select id="filterStatus">
+        <option value="">All Statuses</option>
+        <option value="completed">Completed</option>
+        <option value="in-progress">In Progress</option>
+        <option value="planned">Planned</option>
+      </select>
+      <button class="btn-primary" onclick="loadProjects()">Apply filters</button>
+    </div>
+
+    <div id="projectsList" class="projects-list">
+      <div class="empty-state">Select filters above to load projects.</div>
+    </div>
+  </section>
+
+  <!-- ─── INSTITUTIONS VIEW ─── -->
+  <section id="view-institutions" class="view">
+    <div class="panel">
+      <h2>Top institutions by project count</h2>
+      <table class="data-table" id="institutionsTable">
+        <thead>
+          <tr><th>Institution</th><th class="num">Projects</th><th class="num">Total funding</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ─── SEARCH VIEW ─── -->
+  <section id="view-search" class="view">
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder='Search projects (e.g. "silver ink Kapton" or "phased array X-band")' />
+      <button class="btn-primary" onclick="runSearch()">Search</button>
+    </div>
+    <div id="searchResults" class="projects-list">
+      <div class="empty-state">Enter a search query above. Full-text search covers titles, abstracts, materials, processes, PIs.</div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ─── PROJECT DETAIL MODAL ─── -->
+<div id="modal" class="modal hidden">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeModal()">×</button>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<footer class="footer">
+  <span>NextFlex Project Portal v1.0 · Demonstration data · <a href="/api/health">API health</a></span>
+</footer>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
