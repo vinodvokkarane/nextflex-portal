@@ -14,10 +14,12 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Optional
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Request, Response, Form, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
+
+import auth
 
 DB_PATH = Path(__file__).parent / "nextflex.db"
 STATIC_DIR = Path(__file__).parent / "static"
@@ -127,13 +129,24 @@ def list_projects(
     """List projects with optional filters and full-text search."""
     with db() as conn:
         if q:
+            # Sanitize for FTS5: strip operator characters that would crash the parser
+            # (hyphens, double quotes, parentheses, asterisks at unsafe positions, etc.)
+            # Strategy: keep alphanumerics + spaces, then quote each token to force literal match
+            import re
+            tokens = re.findall(r"[A-Za-z0-9]+", q)
+            if not tokens:
+                # Nothing searchable
+                return {"count": 0, "limit": limit, "offset": offset, "results": []}
+            # Wrap each token in double quotes so FTS5 treats them as literals
+            fts_query = " ".join(f'"{t}"' for t in tokens)
+
             # Full-text search via FTS5 virtual table
             sql = """
                 SELECT p.* FROM projects p
                 JOIN projects_fts fts ON p.id = fts.id
                 WHERE projects_fts MATCH ?
             """
-            params = [q]
+            params = [fts_query]
             if pc:
                 sql += " AND p.project_call = ?"
                 params.append(pc)
@@ -266,9 +279,67 @@ def root():
 
 
 @app.get("/manager")
-def manager_dashboard():
-    """Serve the NextFlex Program Manager dashboard (v6 with role switcher)."""
+def manager_dashboard(request: Request):
+    """Serve the NextFlex Program Manager dashboard. Requires login."""
+    user = auth.current_user(request)
+    if not user:
+        return RedirectResponse(url="/manager/login", status_code=302)
     return FileResponse(STATIC_DIR / "manager.html")
+
+
+@app.get("/manager/login")
+def manager_login_page(request: Request):
+    """Login form for the manager dashboard."""
+    # If already logged in, skip the form
+    if auth.current_user(request):
+        return RedirectResponse(url="/manager", status_code=302)
+    return FileResponse(STATIC_DIR / "login.html")
+
+
+@app.post("/api/auth/login")
+def login(
+    response: Response,
+    username: str = Form(...),
+    password: str = Form(...),
+):
+    """Authenticate and issue a session cookie."""
+    user = auth.authenticate(username.strip(), password)
+    if not user:
+        raise HTTPException(status_code=401, detail="invalid_credentials")
+
+    token = auth.issue_token(user)
+    response.set_cookie(
+        key=auth.COOKIE_NAME,
+        value=token,
+        max_age=auth.JWT_EXPIRY_HOURS * 3600,
+        httponly=True,        # JS can't read it -> XSS mitigation
+        secure=True,          # only sent over HTTPS (Render serves HTTPS)
+        samesite="strict",    # CSRF mitigation
+        path="/",
+    )
+    return {
+        "username": user["username"],
+        "role": user["role"],
+        "display_name": user["display_name"],
+        "title": user["title"],
+        "avatar": user["avatar"],
+    }
+
+
+@app.post("/api/auth/logout")
+def logout(response: Response):
+    """Clear the session cookie."""
+    response.delete_cookie(key=auth.COOKIE_NAME, path="/")
+    return {"status": "logged_out"}
+
+
+@app.get("/api/auth/whoami")
+def whoami(request: Request):
+    """Return the current user's identity (used by the dashboard on load)."""
+    user = auth.current_user(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="not_authenticated")
+    return user
 
 
 if __name__ == "__main__":

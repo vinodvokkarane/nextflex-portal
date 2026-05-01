@@ -384,9 +384,22 @@ a{color:var(--teal);text-decoration:none}
 .rs-btn.active .rs-icon{background:rgba(255,255,255,.2);color:#fff}
 
 /* ═══ ROLE-BASED VISIBILITY ═══ */
-body[data-role="admin"] [data-roles]:not([data-roles~="admin"]){display:none !important}
-body[data-role="dod"] [data-roles]:not([data-roles~="dod"]){display:none !important}
-body[data-role="member"] [data-roles]:not([data-roles~="member"]){display:none !important}
+/* Hide everything role-tagged until JS sets the body role from /api/auth/whoami */
+[data-roles]{display:none !important}
+body[data-role="admin"] [data-roles~="admin"]{display:revert !important}
+body[data-role="dod"] [data-roles~="dod"]{display:revert !important}
+body[data-role="member"] [data-roles~="member"]{display:revert !important}
+
+/* Re-establish flex/grid for elements that need it */
+body[data-role="admin"] .grid-stats[data-roles~="admin"],
+body[data-role="dod"] .grid-stats[data-roles~="dod"],
+body[data-role="member"] .grid-stats[data-roles~="member"]{display:grid !important}
+body[data-role="admin"] .trl-strip[data-roles~="admin"],
+body[data-role="dod"] .trl-strip[data-roles~="dod"]{display:grid !important}
+body[data-role="admin"] .grid2[data-roles~="admin"],
+body[data-role="dod"] .grid2[data-roles~="dod"],
+body[data-role="member"] .grid2[data-roles~="member"]{display:grid !important}
+body[data-role="admin"] .grid2.equal[data-roles~="admin"]{display:grid !important}
 
 /* When right-stack hides for non-admin, let KG explorer take full width */
 body[data-role="dod"] .kg-grid,
@@ -400,7 +413,7 @@ body[data-role="member"] .kg-grid{grid-template-columns:1fr}
 
 </style>
 </head>
-<body data-role="admin">
+<body data-role="">
 <div class="container">
 
 <!-- ═══ HEADER ═══ -->
@@ -437,31 +450,23 @@ body[data-role="member"] .kg-grid{grid-template-columns:1fr}
 </div>
 
 <!-- ═══ ROLE SWITCHER (LOGIN PERSONA) ═══ -->
+<!-- ═══ SESSION BAR (replaces role switcher — role is now set by login) ═══ -->
 <div class="role-switcher">
   <span class="rs-label">
-    <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="6" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M2 14a6 6 0 0 1 12 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-    Logged in as
+    <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M12 7H4a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1Z" stroke="currentColor" stroke-width="1.5"/><path d="M5.5 7V4.5a2.5 2.5 0 0 1 5 0V7" stroke="currentColor" stroke-width="1.5"/></svg>
+    Authenticated as
   </span>
-  <button class="rs-btn active" onclick="setRole('admin', this)">
-    <span class="rs-icon admin">★</span>
+  <div class="rs-btn active" id="sessionPersona" style="cursor:default">
+    <span class="rs-icon admin" id="sessionIcon">★</span>
     <div class="rs-meta">
-      <div class="rs-name">NextFlex Admin</div>
-      <div class="rs-desc">Full ops · Districts · Team</div>
+      <div class="rs-name" id="sessionName">—</div>
+      <div class="rs-desc" id="sessionRoleDesc">—</div>
     </div>
-  </button>
-  <button class="rs-btn" onclick="setRole('dod', this)">
-    <span class="rs-icon dod">⬢</span>
-    <div class="rs-meta">
-      <div class="rs-name">DoD User</div>
-      <div class="rs-desc">PEOs · Mission · Security</div>
-    </div>
-  </button>
-  <button class="rs-btn" onclick="setRole('member', this)">
-    <span class="rs-icon member">⚙</span>
-    <div class="rs-meta">
-      <div class="rs-name">Member / Industry</div>
-      <div class="rs-desc">Knowledge graph · Query</div>
-    </div>
+  </div>
+  <span style="flex:1"></span>
+  <button onclick="logout()" style="padding:8px 16px;border:1px solid var(--border);background:var(--card);color:var(--muted);border-radius:var(--radius-sm);cursor:pointer;font-family:inherit;font-size:12px;font-weight:600;transition:all .15s;display:inline-flex;align-items:center;gap:6px" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+    <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M10 11V13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M14 8H6m0 0 3-3m-3 3 3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    Sign out
   </button>
 </div>
 
@@ -624,15 +629,21 @@ body[data-role="member"] .kg-grid{grid-template-columns:1fr}
     <button class="btn" onclick="runQuery()">Query</button>
   </div>
   <div class="query-examples">
-    <button class="query-ex" data-roles="member" onclick="setQuery(this)">How does platen temperature affect insertion loss at 10 GHz?</button>
-    <button class="query-ex" data-roles="member" onclick="setQuery(this)">Compare PAE across all printed PA designs at 28 GHz</button>
-    <button class="query-ex" data-roles="member" onclick="setQuery(this)">Which Ag inks showed best adhesion on Kapton across PC 7–10?</button>
-    <button class="query-ex" data-roles="dod" onclick="setQuery(this)">Show all commercial deployments linked to PEO Soldier</button>
-    <button class="query-ex" data-roles="dod" onclick="setQuery(this)">Which PEOs have active acquisition pathways for printed RF devices?</button>
-    <button class="query-ex" data-roles="dod" onclick="setQuery(this)">Show mission-ready X-band antenna data with thermal cycling validation</button>
-    <button class="query-ex" data-roles="dod" onclick="setQuery(this)">List materials qualified to MIL-STD-810 environmental conditions</button>
-    <button class="query-ex" data-roles="member" onclick="setQuery(this)">Find all Cu inks with post-cure resistivity below 5×10⁻⁸ Ω·m</button>
-    <button class="query-ex" data-roles="member" onclick="setQuery(this)">Which dielectric inks have ε_r &gt; 100 with tan δ &lt; 0.02?</button>
+    <!-- DoD persona - mission-flavored, RF/conformal/soldier focus, all verified to hit -->
+    <button class="query-ex" data-roles="dod" onclick="setQuery(this)">X-band antenna</button>
+    <button class="query-ex" data-roles="dod" onclick="setQuery(this)">Ka-band phased array</button>
+    <button class="query-ex" data-roles="dod" onclick="setQuery(this)">5G mm-wave</button>
+    <button class="query-ex" data-roles="dod" onclick="setQuery(this)">soldier wearable</button>
+    <button class="query-ex" data-roles="dod" onclick="setQuery(this)">conformal antenna</button>
+    <button class="query-ex" data-roles="dod" onclick="setQuery(this)">phased array antennas</button>
+
+    <!-- Member persona - technical materials/processes, all verified to hit -->
+    <button class="query-ex" data-roles="member" onclick="setQuery(this)">silver nanoparticle ink</button>
+    <button class="query-ex" data-roles="member" onclick="setQuery(this)">Kapton polyimide</button>
+    <button class="query-ex" data-roles="member" onclick="setQuery(this)">aerosol jet printing</button>
+    <button class="query-ex" data-roles="member" onclick="setQuery(this)">laser sintering</button>
+    <button class="query-ex" data-roles="member" onclick="setQuery(this)">BST dielectric</button>
+    <button class="query-ex" data-roles="member" onclick="setQuery(this)">copper ink</button>
   </div>
 </div>
 
@@ -1392,62 +1403,62 @@ animateCounter('d4', 247);
 // Member query response time
 setTimeout(() => { const el = document.getElementById('m4'); if (el) el.textContent = '1.2s'; }, 900);
 
-// ═══ ROLE SWITCHER ═══
-const personas = {
-  admin: {
-    name: 'Scott Miller',
-    role: 'Executive Director · NextFlex',
-    avatar: 'SM',
-    tag: '★ NextFlex Admin',
-    tagClass: 'admin'
-  },
-  dod: {
-    name: 'Dr. R. Adams',
-    role: 'Materials Director · ARL',
-    avatar: 'RA',
-    tag: '⬢ DoD User',
-    tagClass: 'dod'
-  },
-  member: {
-    name: 'Dr. V. Vokkarane',
-    role: 'PI · UMass Lowell ECE',
-    avatar: 'VV',
-    tag: '⚙ Member · Tier 1',
-    tagClass: 'member'
-  }
+// ═══ SESSION-DRIVEN ROLE (real auth, not a switcher) ═══
+const roleDescriptors = {
+  admin:  { icon: '★', label: 'NextFlex Admin',     desc: 'Full ops · Districts · Team',         tag: '★ NextFlex Admin',     tagClass: 'admin'  },
+  dod:    { icon: '⬢', label: 'DoD User',           desc: 'PEOs · Mission · Security',           tag: '⬢ DoD User',           tagClass: 'dod'    },
+  member: { icon: '⚙', label: 'Member / Industry',  desc: 'Knowledge graph · Query',             tag: '⚙ Member · Tier 1',    tagClass: 'member' },
 };
 
-function setRole(role, btn) {
-  document.body.dataset.role = role;
-  document.querySelectorAll('.role-switcher .rs-btn').forEach(b => b.classList.remove('active'));
-  if (btn) btn.classList.add('active');
-
-  const p = personas[role];
-  document.getElementById('uname').textContent = p.name;
-  document.getElementById('urole').textContent = p.role;
-  document.getElementById('userAvatar').textContent = p.avatar;
-
-  const tag = document.getElementById('roleTag');
-  tag.textContent = p.tag;
-  tag.className = 'role-tag ' + p.tagClass;
-
-  // Re-trigger TRL/MRL bar animation if the role shows them
-  setTimeout(() => {
-    const trl = document.getElementById('trlBar');
-    const mrl = document.getElementById('mrlBar');
-    if (trl && trl.offsetParent !== null) {
-      trl.style.width = '0';
-      mrl.style.width = '0';
-      requestAnimationFrame(() => {
-        trl.style.width = '66.7%';
-        mrl.style.width = '66.7%';
-      });
+async function loadSession() {
+  try {
+    const res = await fetch('/api/auth/whoami', { credentials: 'same-origin' });
+    if (res.status === 401) {
+      window.location.href = '/manager/login';
+      return null;
     }
-  }, 50);
-
-  // Scroll to top on role switch for clean experience
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (!res.ok) throw new Error('Session check failed');
+    const user = await res.json();
+    applySession(user);
+    return user;
+  } catch (e) {
+    console.error('Session load failed:', e);
+    window.location.href = '/manager/login';
+    return null;
+  }
 }
+
+function applySession(user) {
+  document.body.dataset.role = user.role;
+  const desc = roleDescriptors[user.role];
+
+  // Header user block
+  document.getElementById('uname').textContent = user.display_name;
+  document.getElementById('urole').textContent = user.title;
+  document.getElementById('userAvatar').textContent = user.avatar;
+  const tag = document.getElementById('roleTag');
+  tag.textContent = desc.tag;
+  tag.className = 'role-tag ' + desc.tagClass;
+
+  // Session bar
+  document.getElementById('sessionName').textContent = user.display_name;
+  document.getElementById('sessionRoleDesc').textContent = desc.desc;
+  const iconEl = document.getElementById('sessionIcon');
+  iconEl.textContent = desc.icon;
+  iconEl.className = 'rs-icon ' + user.role;
+}
+
+async function logout() {
+  if (!confirm('Sign out of the manager dashboard?')) return;
+  try {
+    await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
+  } finally {
+    window.location.href = '/manager/login';
+  }
+}
+
+// Boot session check before anything else
+loadSession();
 setTimeout(() => { document.getElementById('s4') && (document.getElementById('s4').textContent = '1.2s'); }, 900);
 
 // ═══ TRL/MRL BARS ═══

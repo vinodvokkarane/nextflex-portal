@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign in · NextFlex Manager Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f4f6f8; --card:#fff; --border:#e1e5ea;
+  --navy:#132B4A; --teal:#0A8F8F; --teal-dark:#077272;
+  --text:#0f172a; --muted:#64748b; --subtle:#94a3b8;
+  --red:#dc2626; --green:#059669;
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#0c0e14; --card:#151820; --border:#232830;
+  --text:#e2e8f0; --muted:#7d8694; --subtle:#535c6a;
+}}
+body{
+  font-family:'Instrument Sans',system-ui,sans-serif;
+  background:var(--bg); color:var(--text); min-height:100vh;
+  display:flex; align-items:center; justify-content:center;
+  padding:20px; line-height:1.5; -webkit-font-smoothing:antialiased;
+}
+
+.login-bg{
+  position:fixed; inset:0; z-index:-1;
+  background:linear-gradient(135deg, #132B4A 0%, #1a3d6a 50%, #0A8F8F 100%);
+  opacity:.08;
+}
+@media(prefers-color-scheme:dark){.login-bg{opacity:.18}}
+
+.login-card{
+  background:var(--card); border:1px solid var(--border);
+  border-radius:16px; padding:40px; max-width:420px; width:100%;
+  box-shadow:0 24px 64px rgba(0,0,0,.08), 0 4px 12px rgba(0,0,0,.04);
+}
+@media(prefers-color-scheme:dark){
+  .login-card{box-shadow:0 24px 64px rgba(0,0,0,.4), 0 4px 12px rgba(0,0,0,.2)}
+}
+
+.brand{
+  display:flex; align-items:center; gap:12px;
+  margin-bottom:28px;
+}
+.brand-mark{
+  width:42px; height:42px; border-radius:11px;
+  background:linear-gradient(135deg, var(--navy), var(--teal));
+  color:#fff; display:flex; align-items:center; justify-content:center;
+  font-weight:700; font-size:14px;
+  box-shadow:0 4px 12px rgba(10,143,143,.3);
+}
+.brand-text h1{font-size:16px; font-weight:700; letter-spacing:-.02em}
+.brand-text p{font-size:11px; color:var(--muted); margin-top:1px}
+
+.lock-row{
+  display:inline-flex; align-items:center; gap:6px;
+  font-size:11px; color:var(--green); font-weight:600;
+  background:rgba(5,150,105,.08); padding:5px 12px; border-radius:20px;
+  margin-bottom:24px;
+}
+
+h2{font-size:22px; font-weight:700; letter-spacing:-.02em; margin-bottom:6px}
+.subtitle{font-size:13px; color:var(--muted); margin-bottom:24px}
+
+.form-row{margin-bottom:14px}
+label{
+  display:block; font-size:11px; font-weight:600;
+  color:var(--muted); text-transform:uppercase; letter-spacing:.06em;
+  margin-bottom:6px;
+}
+input[type=text], input[type=password]{
+  width:100%; padding:11px 14px;
+  font-family:inherit; font-size:14px;
+  border:1px solid var(--border); border-radius:10px;
+  background:var(--bg); color:var(--text); transition:all .15s;
+}
+input:focus{
+  outline:none; border-color:var(--teal);
+  box-shadow:0 0 0 3px rgba(10,143,143,.12);
+}
+
+.btn{
+  width:100%; padding:12px; margin-top:8px;
+  background:linear-gradient(135deg, var(--teal), var(--teal-dark));
+  color:#fff; border:none; border-radius:10px;
+  font-family:inherit; font-size:14px; font-weight:600;
+  cursor:pointer; transition:all .15s;
+  box-shadow:0 2px 8px rgba(10,143,143,.25);
+}
+.btn:hover{transform:translateY(-1px); box-shadow:0 4px 16px rgba(10,143,143,.35)}
+.btn:active{transform:translateY(0)}
+.btn:disabled{opacity:.6; cursor:not-allowed; transform:none}
+
+.error{
+  background:rgba(220,38,38,.08); border:1px solid rgba(220,38,38,.2);
+  color:var(--red); font-size:12px; padding:10px 14px;
+  border-radius:8px; margin-bottom:14px; display:none;
+}
+.error.show{display:block; animation:shake .35s ease}
+@keyframes shake{0%,100%{transform:none}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+
+.footer-link{
+  text-align:center; margin-top:20px;
+  font-size:12px; color:var(--muted);
+}
+.footer-link a{color:var(--teal); text-decoration:none}
+.footer-link a:hover{text-decoration:underline}
+
+.security-note{
+  font-size:11px; color:var(--subtle); margin-top:24px;
+  padding-top:20px; border-top:1px solid var(--border);
+  display:flex; align-items:flex-start; gap:8px; line-height:1.6;
+}
+.security-note svg{flex-shrink:0; margin-top:2px; color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="login-bg"></div>
+
+<div class="login-card">
+  <div class="brand">
+    <div class="brand-mark">NF</div>
+    <div class="brand-text">
+      <h1>NextFlex</h1>
+      <p>Secure AI/ML Manager Dashboard</p>
+    </div>
+  </div>
+
+  <div class="lock-row">
+    <svg width="11" height="11" viewBox="0 0 16 16" fill="none">
+      <path d="M12 7H4a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1Z" stroke="currentColor" stroke-width="1.5"/>
+      <path d="M5.5 7V4.5a2.5 2.5 0 0 1 5 0V7" stroke="currentColor" stroke-width="1.5"/>
+    </svg>
+    Authenticated session required
+  </div>
+
+  <h2>Sign in</h2>
+  <p class="subtitle">Enter your NextFlex credentials to access the program manager dashboard.</p>
+
+  <div class="error" id="errorBox">Invalid username or password.</div>
+
+  <form id="loginForm">
+    <div class="form-row">
+      <label for="username">Username</label>
+      <input type="text" id="username" name="username" autocomplete="username" required autofocus />
+    </div>
+    <div class="form-row">
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" autocomplete="current-password" required />
+    </div>
+    <button type="submit" class="btn" id="submitBtn">Sign in</button>
+  </form>
+
+  <div class="footer-link">
+    <a href="/">← Back to project portal</a>
+  </div>
+
+  <div class="security-note">
+    <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M8 1L1 4v5c0 4 3 6 7 7 4-1 7-3 7-7V4L8 1Z" stroke="currentColor" stroke-width="1.5"/></svg>
+    <span>Sessions expire after 8 hours. Cookies are HTTP-only, secure-flagged, and scoped to this site. Failed attempts are logged.</span>
+  </div>
+</div>
+
+<script>
+const form = document.getElementById('loginForm');
+const errorBox = document.getElementById('errorBox');
+const submitBtn = document.getElementById('submitBtn');
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  errorBox.classList.remove('show');
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Signing in…';
+
+  const fd = new FormData(form);
+  try {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      body: fd,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Login failed');
+    }
+    // Success — redirect to the protected dashboard
+    window.location.href = '/manager';
+  } catch (err) {
+    errorBox.textContent = err.message === 'invalid_credentials'
+      ? 'Invalid username or password.'
+      : 'Sign-in failed. Please try again.';
+    errorBox.classList.add('show');
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Sign in';
+    document.getElementById('password').value = '';
+    document.getElementById('password').focus();
+  }
+});
+</script>
+</body>
+</html>
