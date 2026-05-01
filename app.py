@@ -265,6 +265,12 @@ def root():
     return FileResponse(STATIC_DIR / "index.html")
 
 
+@app.get("/manager")
+def manager_dashboard():
+    """Serve the NextFlex Program Manager dashboard (v6 with role switcher)."""
+    return FileResponse(STATIC_DIR / "manager.html")
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)

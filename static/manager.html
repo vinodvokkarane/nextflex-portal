@@ -1,0 +1,1616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NextFlex Secure AI/ML Data Platform — Topic 11.3</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f0f2f5;--card:#fff;--border:#dde1e7;
+  --navy:#132B4A;--teal:#0A8F8F;--teal-dark:#077272;
+  --text:#0f172a;--muted:#64748b;--subtle:#94a3b8;
+  --light-teal:rgba(10,143,143,.06);--light-navy:rgba(19,43,74,.04);
+  --green:#059669;--amber:#d97706;--red:#dc2626;
+  --purple:#6366f1;--indigo:#4f46e5;--rose:#e11d48;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.04);
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 4px 12px rgba(0,0,0,.07);
+  --radius:14px;--radius-sm:10px;
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#0c0e14;--card:#151820;--border:#232830;
+  --text:#e2e8f0;--muted:#7d8694;--subtle:#535c6a;
+  --light-teal:rgba(10,143,143,.12);--light-navy:rgba(100,140,200,.06);
+  --shadow-sm:0 1px 2px rgba(0,0,0,.2);
+  --shadow:0 1px 3px rgba(0,0,0,.3);
+  --shadow-md:0 4px 12px rgba(0,0,0,.3);
+}}
+html{scroll-behavior:smooth}
+body{font-family:'Instrument Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.55;min-height:100vh;-webkit-font-smoothing:antialiased}
+a{color:var(--teal);text-decoration:none}
+.mono{font-family:'JetBrains Mono',monospace}
+
+.container{max-width:1320px;margin:0 auto;padding:16px 24px}
+
+/* ═══ HEADER ═══ */
+.header{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;background:linear-gradient(135deg,#132B4A 0%,#1a3d6a 50%,#0A8F8F 100%);border-radius:var(--radius);margin-bottom:16px;color:#fff;box-shadow:0 4px 24px rgba(19,43,74,.35);position:relative;overflow:hidden}
+.header::before{content:'';position:absolute;top:-40%;right:-5%;width:300px;height:300px;background:radial-gradient(circle,rgba(10,143,143,.25) 0%,transparent 70%);pointer-events:none}
+.hdr-left{display:flex;align-items:center;gap:14px;flex-wrap:wrap;z-index:1}
+.hdr-left h1{font-size:18px;font-weight:700;letter-spacing:-.03em}
+.badge{font-size:11px;background:rgba(255,255,255,.1);backdrop-filter:blur(8px);padding:4px 14px;border-radius:20px;font-weight:500;border:1px solid rgba(255,255,255,.08)}
+.lock-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:#6ee7b7;background:rgba(6,95,70,.3);padding:4px 12px;border-radius:20px;font-weight:600;border:1px solid rgba(6,95,70,.2)}
+.hdr-right{display:flex;align-items:center;gap:14px;z-index:1}
+.hdr-right .user-block{text-align:right}
+.hdr-right .uname{font-weight:600;font-size:13px}
+.hdr-right .urole{font-size:11px;color:rgba(255,255,255,.55)}
+.avatar{width:36px;height:36px;border-radius:50%;background:var(--teal);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;border:2px solid rgba(255,255,255,.15);flex-shrink:0}
+.team-strip{display:flex;gap:6px;margin-top:8px}
+.team-chip{font-size:10px;padding:3px 10px;border-radius:12px;font-weight:600;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.06)}
+
+/* ═══ NAV ═══ */
+.nav{display:flex;gap:2px;margin-bottom:16px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:5px;overflow-x:auto;box-shadow:var(--shadow-sm)}
+.nav button{padding:9px 16px;border:none;background:transparent;color:var(--muted);font-size:12.5px;font-weight:500;border-radius:var(--radius-sm);cursor:pointer;white-space:nowrap;font-family:inherit;transition:all .2s}
+.nav button.active{background:var(--teal);color:#fff;box-shadow:0 2px 10px rgba(10,143,143,.3)}
+.nav button:hover:not(.active){background:var(--light-navy);color:var(--text)}
+
+/* ═══ TRL STRIP ═══ */
+.trl-strip{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+@media(max-width:768px){.trl-strip{grid-template-columns:1fr}}
+.trl-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;box-shadow:var(--shadow-sm);display:flex;align-items:center;gap:16px}
+.trl-label{font-size:12px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+@media(prefers-color-scheme:dark){.trl-label{color:var(--teal)}}
+.trl-track{flex:1;height:8px;background:var(--light-navy);border-radius:4px;overflow:hidden}
+.trl-fill{height:100%;border-radius:4px;transition:width 1.5s cubic-bezier(.22,1,.36,1)}
+.trl-fill.trl{background:linear-gradient(90deg,#0A8F8F,#059669)}
+.trl-fill.mrl{background:linear-gradient(90deg,#6366f1,#8b5cf6)}
+.trl-markers{display:flex;justify-content:space-between;font-size:10px;color:var(--subtle);margin-top:3px;font-family:'JetBrains Mono',monospace}
+.trl-vals{display:flex;gap:8px;align-items:center;font-size:12px;font-weight:600;white-space:nowrap}
+.trl-vals .start{color:var(--muted)}
+.trl-vals .arrow{color:var(--subtle);font-size:11px}
+.trl-vals .end{color:var(--green)}
+
+/* ═══ STAT CARDS ═══ */
+.grid-stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-bottom:16px}
+@media(max-width:900px){.grid-stats{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:600px){.grid-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow-sm);position:relative;overflow:hidden;transition:box-shadow .2s}
+.stat:hover{box-shadow:var(--shadow-md)}
+.stat::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.stat:nth-child(1)::before{background:linear-gradient(90deg,var(--teal),#059669)}
+.stat:nth-child(2)::before{background:linear-gradient(90deg,var(--navy),#1e5090)}
+.stat:nth-child(3)::before{background:linear-gradient(90deg,var(--purple),#8b5cf6)}
+.stat:nth-child(4)::before{background:linear-gradient(90deg,var(--green),#34d399)}
+.stat:nth-child(5)::before{background:linear-gradient(90deg,var(--rose),#f43f5e)}
+.stat .label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;font-weight:600}
+.stat .value{font-size:26px;font-weight:700;letter-spacing:-.04em;line-height:1.1}
+.stat .delta{font-size:11px;margin-top:6px;font-weight:500}
+.stat .delta.up{color:var(--green)}
+.stat .delta.neutral{color:var(--muted)}
+
+/* ═══ PANELS ═══ */
+.grid2{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:12px;margin-bottom:16px}
+@media(max-width:900px){.grid2{grid-template-columns:1fr}}
+.grid2.equal{grid-template-columns:1fr 1fr}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:16px}
+@media(max-width:900px){.grid3{grid-template-columns:1fr}}
+.panel{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow-sm);transition:box-shadow .2s}
+.panel:hover{box-shadow:var(--shadow)}
+.panel h2{font-size:14px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.panel h2 .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.full-panel{margin-bottom:16px}
+
+/* ═══ SEARCH ═══ */
+.search-wrap{position:relative;margin-bottom:12px}
+.search-wrap svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--subtle);pointer-events:none}
+.search-box{width:100%;padding:10px 16px 10px 40px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;background:var(--bg);color:var(--text);font-family:inherit;transition:all .2s}
+.search-box:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(10,143,143,.1)}
+
+/* ═══ FILTER PILLS ═══ */
+.filter-row{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.filter-pill{font-size:11px;padding:4px 12px;border-radius:16px;cursor:pointer;font-weight:600;border:1px solid var(--border);background:var(--card);color:var(--muted);transition:all .15s;font-family:inherit}
+.filter-pill:hover,.filter-pill.active{border-color:var(--teal);color:var(--teal);background:var(--light-teal)}
+
+/* ═══ ENTITY LIST ═══ */
+.entity-list{max-height:400px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.entity{display:flex;align-items:flex-start;gap:12px;padding:10px 12px;border-radius:var(--radius-sm);cursor:pointer;margin-bottom:2px;transition:all .15s}
+.entity:hover{background:var(--light-teal);transform:translateX(2px)}
+.entity .icon{width:38px;height:38px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;font-family:'JetBrains Mono',monospace}
+.entity .icon.mat{background:#dbeafe;color:#1e40af}
+.entity .icon.proc{background:#d1fae5;color:#065f46}
+.entity .icon.test{background:#fef3c7;color:#92400e}
+.entity .icon.rel{background:#fee2e2;color:#991b1b}
+.entity .icon.dev{background:#ede9fe;color:#5b21b6}
+@media(prefers-color-scheme:dark){
+.entity .icon.mat{background:#1e3a5f;color:#93c5fd}
+.entity .icon.proc{background:#064e3b;color:#6ee7b7}
+.entity .icon.test{background:#451a03;color:#fbbf24}
+.entity .icon.rel{background:#450a0a;color:#fca5a5}
+.entity .icon.dev{background:#2e1065;color:#c4b5fd}
+}
+.entity .econtent{flex:1;min-width:0}
+.entity .ename{font-size:13px;font-weight:600}
+.entity .esub{font-size:11px;color:var(--muted);margin-top:1px}
+.entity .etags{display:flex;gap:4px;margin-top:5px;flex-wrap:wrap}
+.tag{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;flex-shrink:0;white-space:nowrap}
+.tag.mat-tag{background:#dbeafe;color:#1e40af}
+.tag.proc-tag{background:#d1fae5;color:#065f46}
+.tag.test-tag{background:#fef3c7;color:#92400e}
+.tag.rel-tag{background:#fee2e2;color:#991b1b}
+.tag.dev-tag{background:#ede9fe;color:#5b21b6}
+@media(prefers-color-scheme:dark){
+.tag.mat-tag{background:#1e3a5f;color:#93c5fd}
+.tag.proc-tag{background:#064e3b;color:#6ee7b7}
+.tag.test-tag{background:#451a03;color:#fbbf24}
+.tag.rel-tag{background:#450a0a;color:#fca5a5}
+.tag.dev-tag{background:#2e1065;color:#c4b5fd}
+}
+
+/* ═══ GEO / COMMERCIAL / PEO TAGS ═══ */
+.tag.geo-tag{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;font-size:9px;padding:2px 7px}
+.tag.commercial-tag{background:#fdf4ff;color:#86198f;border:1px solid #f0abfc;font-size:9px;padding:2px 7px}
+.tag.peo-tag{background:#fff7ed;color:#9a3412;border:1px solid #fed7aa;font-size:9px;padding:2px 7px}
+@media(prefers-color-scheme:dark){
+.tag.geo-tag{background:#052e16;color:#86efac;border-color:#064e3b}
+.tag.commercial-tag{background:#4a044e;color:#f0abfc;border-color:#86198f}
+.tag.peo-tag{background:#431407;color:#fdba74;border-color:#9a3412}
+}
+
+/* ═══ ONTOLOGY STATS ═══ */
+.onto-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:12px}
+.onto-cell{text-align:center;padding:10px 6px;border-radius:var(--radius-sm);background:var(--bg);border:1px solid var(--border)}
+.onto-cell .oc-val{font-size:18px;font-weight:700;font-family:'JetBrains Mono',monospace}
+.onto-cell .oc-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;font-weight:600;margin-top:2px}
+@media(max-width:600px){.onto-grid{grid-template-columns:repeat(3,1fr)}}
+
+/* ═══ INGESTION ═══ */
+.report-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px}
+.report-row:last-child{border-bottom:none}
+.report-row .status{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.report-row .status.done{background:var(--green)}
+.report-row .status.prog{background:var(--amber);animation:pulse 1.5s infinite}
+.report-row .status.queue{background:var(--border)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.report-row .rname{flex:1;font-weight:500;min-width:0}
+.report-row .rmeta{color:var(--muted);font-size:11px}
+.report-row .ent-count{font-size:11px;font-weight:700;color:var(--teal);background:var(--light-teal);padding:2px 10px;border-radius:8px;font-family:'JetBrains Mono',monospace;flex-shrink:0}
+.report-row .geo-sm{font-size:9px;color:#166534;background:#f0fdf4;padding:1px 6px;border-radius:8px;border:1px solid #bbf7d0;flex-shrink:0}
+@media(prefers-color-scheme:dark){.report-row .geo-sm{color:#86efac;background:#052e16;border-color:#064e3b}}
+
+/* ═══ RBAC ═══ */
+.access-row{display:flex;align-items:center;gap:12px;padding:8px 0;font-size:13px}
+.role-badge{padding:4px 12px;border-radius:12px;font-size:11px;font-weight:600;flex-shrink:0}
+.role-badge.admin{background:#ede9fe;color:#5b21b6}
+.role-badge.member{background:#d1fae5;color:#065f46}
+.role-badge.gov{background:#dbeafe;color:#1e40af}
+.role-badge.restricted{background:#fef3c7;color:#92400e}
+.role-badge.industry{background:#fce7f3;color:#9d174d}
+@media(prefers-color-scheme:dark){
+.role-badge.admin{background:#2e1065;color:#c4b5fd}
+.role-badge.member{background:#064e3b;color:#6ee7b7}
+.role-badge.gov{background:#1e3a5f;color:#93c5fd}
+.role-badge.restricted{background:#451a03;color:#fbbf24}
+.role-badge.industry{background:#500724;color:#f9a8d4}
+}
+.access-perm{margin-left:auto;font-size:11px;color:var(--muted)}
+
+/* ═══ GEO MAP PANEL ═══ */
+.geo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}
+.geo-card{padding:12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);transition:all .15s;cursor:pointer;position:relative}
+.geo-card:hover{border-color:var(--teal);box-shadow:var(--shadow)}
+.geo-card .gc-district{font-size:12px;font-weight:700;margin-bottom:2px}
+.geo-card .gc-state{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;font-weight:600}
+.geo-card .gc-rep{font-size:11px;color:var(--text);margin-top:6px;font-weight:500}
+.geo-card .gc-party{font-size:9px;padding:2px 6px;border-radius:6px;font-weight:700;position:absolute;top:10px;right:10px}
+.gc-party.dem{background:#dbeafe;color:#1e40af}
+.gc-party.rep{background:#fee2e2;color:#991b1b}
+@media(prefers-color-scheme:dark){
+.gc-party.dem{background:#1e3a5f;color:#93c5fd}
+.gc-party.rep{background:#450a0a;color:#fca5a5}
+}
+.geo-card .gc-data{font-size:11px;color:var(--teal);margin-top:4px;font-weight:500}
+.geo-card .gc-tags{display:flex;gap:3px;margin-top:6px;flex-wrap:wrap}
+
+/* ═══ PEO PANEL ═══ */
+.peo-row{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);font-size:13px}
+.peo-row:last-child{border-bottom:none}
+.peo-icon{width:40px;height:40px;border-radius:var(--radius-sm);background:linear-gradient(135deg,#132B4A,#1e5090);color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;text-align:center;line-height:1.1}
+.peo-info{flex:1}
+.peo-name{font-size:13px;font-weight:700}
+.peo-org{font-size:11px;color:var(--muted);margin-top:1px}
+.peo-relevance{font-size:11px;color:var(--teal);margin-top:4px;font-weight:500}
+.peo-tags{display:flex;gap:4px;margin-top:5px;flex-wrap:wrap}
+
+/* ═══ COMMERCIAL DEPLOY ═══ */
+.deploy-row{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+.deploy-row:last-child{border-bottom:none}
+.deploy-badge{width:40px;height:40px;border-radius:var(--radius-sm);background:linear-gradient(135deg,#86198f,#c026d3);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.deploy-info{flex:1}
+.deploy-title{font-size:13px;font-weight:700}
+.deploy-detail{font-size:11px;color:var(--muted);margin-top:2px;line-height:1.5}
+.deploy-tags{display:flex;gap:4px;margin-top:5px;flex-wrap:wrap}
+
+/* ═══ TEAM GRID ═══ */
+.team-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.team-member{padding:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);transition:all .15s}
+.team-member:hover{border-color:var(--teal);box-shadow:var(--shadow)}
+.tm-role{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;padding:2px 8px;border-radius:8px;display:inline-block}
+.tm-role.pi{background:#d1fae5;color:#065f46}
+.tm-role.copi{background:#dbeafe;color:#1e40af}
+.tm-role.ind{background:#fce7f3;color:#9d174d}
+@media(prefers-color-scheme:dark){
+.tm-role.pi{background:#064e3b;color:#6ee7b7}
+.tm-role.copi{background:#1e3a5f;color:#93c5fd}
+.tm-role.ind{background:#500724;color:#f9a8d4}
+}
+.tm-name{font-size:13px;font-weight:700;margin-bottom:2px}
+.tm-org{font-size:11px;color:var(--muted)}
+.tm-focus{font-size:11px;color:var(--teal);margin-top:6px;font-weight:500}
+.tm-geo{font-size:10px;color:var(--subtle);margin-top:4px}
+
+/* ═══ ARCHITECTURE ═══ */
+.arch-flow{display:flex;align-items:stretch;gap:0;overflow-x:auto;padding:8px 0}
+.arch-stage{flex:1;min-width:130px;padding:14px;border-radius:var(--radius-sm);text-align:center}
+.arch-stage .as-num{font-size:10px;font-weight:700;color:var(--subtle);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.arch-stage .as-title{font-size:12px;font-weight:700;margin-bottom:4px}
+.arch-stage .as-detail{font-size:11px;color:var(--muted);line-height:1.4}
+.arch-stage:nth-child(1){background:rgba(19,43,74,.06)}
+.arch-stage:nth-child(2){background:rgba(10,143,143,.06)}
+.arch-stage:nth-child(3){background:rgba(99,102,241,.06)}
+.arch-stage:nth-child(4){background:rgba(5,150,105,.06)}
+.arch-stage:nth-child(5){background:rgba(217,119,6,.06)}
+@media(prefers-color-scheme:dark){
+.arch-stage:nth-child(1){background:rgba(19,43,74,.2)}
+.arch-stage:nth-child(2){background:rgba(10,143,143,.15)}
+.arch-stage:nth-child(3){background:rgba(99,102,241,.12)}
+.arch-stage:nth-child(4){background:rgba(5,150,105,.12)}
+.arch-stage:nth-child(5){background:rgba(217,119,6,.12)}
+}
+.arch-arrow{display:flex;align-items:center;color:var(--subtle);font-size:18px;padding:0 2px;flex-shrink:0}
+
+/* ═══ CHARTS ═══ */
+.chart-wrap{position:relative;height:210px;margin-top:8px}
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:6px;font-size:12px;color:var(--muted)}
+.legend span{display:flex;align-items:center;gap:5px}
+.legend .sw{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+
+/* ═══ QUERY ═══ */
+.query-section{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;box-shadow:var(--shadow-sm);margin-bottom:16px}
+.query-section h2{font-size:14px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.query-bar{display:flex;align-items:center;gap:12px}
+.query-bar input{flex:1;padding:11px 16px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;background:var(--bg);color:var(--text);font-family:inherit;transition:all .2s}
+.query-bar input:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(10,143,143,.1)}
+.query-bar .btn{padding:10px 28px;border:none;background:linear-gradient(135deg,var(--teal),var(--teal-dark));color:#fff;border-radius:var(--radius-sm);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;transition:all .2s;box-shadow:0 2px 10px rgba(10,143,143,.25)}
+.query-bar .btn:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(10,143,143,.35)}
+.query-examples{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.query-ex{font-size:11px;padding:5px 12px;border-radius:16px;cursor:pointer;font-weight:500;border:1px solid var(--border);background:var(--bg);color:var(--muted);transition:all .15s;font-family:inherit}
+.query-ex:hover{border-color:var(--teal);color:var(--teal);background:var(--light-teal)}
+
+/* ═══ TIMELINE ═══ */
+.timeline{display:flex;gap:0;overflow-x:auto;padding:6px 0}
+.tl-phase{flex:1;min-width:200px;padding:14px 16px;border-left:3px solid var(--teal);margin-left:8px}
+.tl-phase:nth-child(2){border-color:var(--purple)}
+.tl-phase:nth-child(3){border-color:var(--green)}
+.tl-months{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--subtle);margin-bottom:4px}
+.tl-title{font-size:13px;font-weight:700;margin-bottom:4px}
+.tl-items{font-size:11px;color:var(--muted);line-height:1.6}
+
+.right-stack{display:flex;flex-direction:column;gap:12px}
+
+.footer{text-align:center;padding:20px 0;font-size:11px;color:var(--subtle)}
+.footer a{color:var(--teal)}
+
+/* ═══ ANIM ═══ */
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.panel,.stat,.trl-card,.query-section{animation:fadeUp .5s ease both}
+.stat:nth-child(2){animation-delay:.04s}
+.stat:nth-child(3){animation-delay:.08s}
+.stat:nth-child(4){animation-delay:.12s}
+.stat:nth-child(5){animation-delay:.16s}
+
+/* ═══ SECTION DIVIDER ═══ */
+.sec-divider{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--subtle);margin:20px 0 12px;padding-bottom:6px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.sec-divider .sd-icon{width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px}
+
+/* ═══ ONTOLOGY DETAIL ═══ */
+.onto-branch{margin-bottom:12px;padding:12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg)}
+.onto-branch:last-child{margin-bottom:0}
+.onto-branch-title{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.onto-class-icon{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;flex-shrink:0}
+.onto-class-icon.mat{background:#dbeafe;color:#1e40af}
+.onto-class-icon.proc{background:#d1fae5;color:#065f46}
+.onto-class-icon.perf{background:#e0e7ff;color:#3730a3}
+@media(prefers-color-scheme:dark){
+.onto-class-icon.mat{background:#1e3a5f;color:#93c5fd}
+.onto-class-icon.proc{background:#064e3b;color:#6ee7b7}
+.onto-class-icon.perf{background:#312e81;color:#c7d2fe}
+}
+.onto-count{margin-left:auto;font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;font-weight:500}
+.onto-subclass{padding:7px 4px;border-bottom:1px dashed var(--border)}
+.onto-subclass:last-child{border-bottom:none}
+.osc-name{font-size:12px;font-weight:600;color:var(--text);margin-bottom:5px}
+.osc-props{display:flex;gap:4px;flex-wrap:wrap}
+.prop-chip{font-size:10px;padding:2px 8px;border-radius:8px;background:var(--card);border:1px solid var(--border);color:var(--muted);font-weight:500;font-family:'JetBrains Mono',monospace}
+.prop-chip:hover{border-color:var(--teal);color:var(--teal)}
+
+/* ═══ CAUSAL CHAINS ═══ */
+.chain{margin-bottom:10px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);transition:all .2s}
+.chain:hover{border-color:var(--teal);box-shadow:var(--shadow-sm)}
+.chain.chain-feature{border-color:var(--rose);background:rgba(225,29,72,.04)}
+.chain-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--subtle);margin-bottom:8px}
+.chain.chain-feature .chain-label{color:var(--rose)}
+.chain-flow{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.chain-node{padding:7px 10px;border-radius:8px;font-size:11px;font-weight:700;text-align:center;line-height:1.2;flex:1;min-width:80px}
+.chain-node.mat{background:#dbeafe;color:#1e40af}
+.chain-node.proc{background:#d1fae5;color:#065f46}
+.chain-node.perf{background:#e0e7ff;color:#3730a3}
+.chain-node.dev{background:#ede9fe;color:#5b21b6}
+@media(prefers-color-scheme:dark){
+.chain-node.mat{background:#1e3a5f;color:#93c5fd}
+.chain-node.proc{background:#064e3b;color:#6ee7b7}
+.chain-node.perf{background:#312e81;color:#c7d2fe}
+.chain-node.dev{background:#2e1065;color:#c4b5fd}
+}
+.chain-arrow{color:var(--subtle);font-size:14px;font-weight:700;flex-shrink:0}
+.chain-detail{font-size:10px;color:var(--muted);margin-top:7px;font-style:italic;padding-left:8px;border-left:2px solid var(--border);line-height:1.5}
+
+/* ═══ PERFORMANCE ENTITY (new top-level class) ═══ */
+.entity .icon.perf{background:#e0e7ff;color:#3730a3}
+@media(prefers-color-scheme:dark){.entity .icon.perf{background:#312e81;color:#c7d2fe}}
+.tag.perf-tag{background:#e0e7ff;color:#3730a3}
+@media(prefers-color-scheme:dark){.tag.perf-tag{background:#312e81;color:#c7d2fe}}
+/* ═══ ROLE SWITCHER ═══ */
+.role-switcher{display:flex;align-items:center;gap:8px;padding:10px 14px;background:linear-gradient(135deg,rgba(19,43,74,.04),rgba(10,143,143,.04));border:1px solid var(--border);border-radius:var(--radius);margin-bottom:14px;box-shadow:var(--shadow-sm);overflow-x:auto;flex-wrap:wrap}
+@media(prefers-color-scheme:dark){.role-switcher{background:linear-gradient(135deg,rgba(19,43,74,.15),rgba(10,143,143,.1))}}
+.rs-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--subtle);white-space:nowrap;margin-right:4px;flex-shrink:0;display:flex;align-items:center;gap:6px}
+.rs-label svg{flex-shrink:0}
+.rs-btn{display:flex;align-items:center;gap:10px;padding:8px 14px;border:1px solid var(--border);background:var(--card);color:var(--text);border-radius:var(--radius-sm);cursor:pointer;font-family:inherit;font-size:12px;font-weight:600;transition:all .2s;flex-shrink:0;white-space:nowrap;text-align:left}
+.rs-btn:hover{border-color:var(--teal);box-shadow:0 1px 4px rgba(10,143,143,.15)}
+.rs-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0}
+.rs-icon.admin{background:#e0e7ff;color:#3730a3}
+.rs-icon.dod{background:#fef3c7;color:#92400e}
+.rs-icon.member{background:#d1fae5;color:#065f46}
+@media(prefers-color-scheme:dark){
+.rs-icon.admin{background:#312e81;color:#c7d2fe}
+.rs-icon.dod{background:#451a03;color:#fbbf24}
+.rs-icon.member{background:#064e3b;color:#6ee7b7}
+}
+.rs-meta{line-height:1.2}
+.rs-name{font-size:12px;font-weight:700}
+.rs-desc{font-size:9px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-top:1px}
+.rs-btn.active{background:linear-gradient(135deg,#132B4A,#0A8F8F);color:#fff;border-color:transparent;box-shadow:0 2px 12px rgba(10,143,143,.3)}
+.rs-btn.active .rs-desc{color:rgba(255,255,255,.7)}
+.rs-btn.active .rs-icon{background:rgba(255,255,255,.2);color:#fff}
+
+/* ═══ ROLE-BASED VISIBILITY ═══ */
+body[data-role="admin"] [data-roles]:not([data-roles~="admin"]){display:none !important}
+body[data-role="dod"] [data-roles]:not([data-roles~="dod"]){display:none !important}
+body[data-role="member"] [data-roles]:not([data-roles~="member"]){display:none !important}
+
+/* When right-stack hides for non-admin, let KG explorer take full width */
+body[data-role="dod"] .kg-grid,
+body[data-role="member"] .kg-grid{grid-template-columns:1fr}
+
+/* Role-pill identifier shown next to user persona */
+.role-tag{display:inline-flex;align-items:center;gap:5px;font-size:10px;padding:3px 9px;border-radius:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-top:4px}
+.role-tag.admin{background:rgba(99,102,241,.25);color:#c7d2fe;border:1px solid rgba(99,102,241,.3)}
+.role-tag.dod{background:rgba(217,119,6,.3);color:#fbbf24;border:1px solid rgba(217,119,6,.3)}
+.role-tag.member{background:rgba(5,150,105,.3);color:#6ee7b7;border:1px solid rgba(5,150,105,.3)}
+
+</style>
+</head>
+<body data-role="admin">
+<div class="container">
+
+<!-- ═══ HEADER ═══ -->
+<div class="header">
+  <div class="hdr-left">
+    <div>
+      <h1>NextFlex Secure AI/ML Data Platform</h1>
+      <div style="display:flex;gap:8px;margin-top:8px;align-items:center;flex-wrap:wrap">
+        <span class="badge">PC 11.0 &bull; Topic 11.3</span>
+        <span class="lock-badge">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M12 7H4a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1Z" stroke="currentColor" stroke-width="1.5"/><path d="M5.5 7V4.5a2.5 2.5 0 0 1 5 0V7" stroke="currentColor" stroke-width="1.5"/></svg>
+          FedRAMP High &bull; Zero Data Egress
+        </span>
+      </div>
+      <div class="team-strip">
+        <span class="team-chip">UMass Lowell (Prime)</span>
+        <span class="team-chip">Raytheon (RURI)</span>
+        <span class="team-chip">Northrop Grumman</span>
+        <span class="team-chip">ARL (DoD)</span>
+      </div>
+    </div>
+  </div>
+  <div class="hdr-right">
+    <a href="/" style="color:rgba(255,255,255,.7);font-size:12px;text-decoration:none;padding:6px 12px;border:1px solid rgba(255,255,255,.15);border-radius:8px;margin-right:14px;transition:all .15s;display:inline-flex;align-items:center;gap:6px" onmouseover="this.style.background='rgba(255,255,255,.1)';this.style.color='#fff'" onmouseout="this.style.background='transparent';this.style.color='rgba(255,255,255,.7)'">
+      ← Portal
+    </a>
+    <div class="user-block">
+      <div class="uname" id="uname">Scott Miller</div>
+      <div class="urole" id="urole">Executive Director · NextFlex</div>
+      <span class="role-tag admin" id="roleTag">★ NextFlex Admin</span>
+    </div>
+    <div class="avatar" id="userAvatar">SM</div>
+  </div>
+</div>
+
+<!-- ═══ ROLE SWITCHER (LOGIN PERSONA) ═══ -->
+<div class="role-switcher">
+  <span class="rs-label">
+    <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="6" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M2 14a6 6 0 0 1 12 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    Logged in as
+  </span>
+  <button class="rs-btn active" onclick="setRole('admin', this)">
+    <span class="rs-icon admin">★</span>
+    <div class="rs-meta">
+      <div class="rs-name">NextFlex Admin</div>
+      <div class="rs-desc">Full ops · Districts · Team</div>
+    </div>
+  </button>
+  <button class="rs-btn" onclick="setRole('dod', this)">
+    <span class="rs-icon dod">⬢</span>
+    <div class="rs-meta">
+      <div class="rs-name">DoD User</div>
+      <div class="rs-desc">PEOs · Mission · Security</div>
+    </div>
+  </button>
+  <button class="rs-btn" onclick="setRole('member', this)">
+    <span class="rs-icon member">⚙</span>
+    <div class="rs-meta">
+      <div class="rs-name">Member / Industry</div>
+      <div class="rs-desc">Knowledge graph · Query</div>
+    </div>
+  </button>
+</div>
+
+<!-- ═══ NAV ═══ -->
+<div class="nav">
+  <button class="active" data-tab="dashboard" data-roles="admin dod member">Dashboard</button>
+  <button data-tab="graph" data-roles="admin dod member">Knowledge graph</button>
+  <button data-tab="ingestion" data-roles="admin member">Report ingestion</button>
+  <button data-tab="materials" data-roles="admin dod member">Materials DB</button>
+  <button data-tab="geo" data-roles="admin">Geo &amp; districts</button>
+  <button data-tab="commercial" data-roles="admin dod">Commercial deploy</button>
+  <button data-tab="peo" data-roles="admin dod">DoD PEO</button>
+  <button data-tab="access" data-roles="admin">Access control</button>
+  <button data-tab="reliability" data-roles="admin dod member">Reliability</button>
+  <button data-tab="audit" data-roles="admin dod">Audit log</button>
+  <button data-tab="techhub" data-roles="admin member">Tech Hub</button>
+</div>
+
+<!-- ═══ TRL/MRL ═══ -->
+<div class="trl-strip" data-roles="admin dod">
+  <div class="trl-card">
+    <div class="trl-label">TRL</div>
+    <div style="flex:1">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <span style="font-size:11px;color:var(--muted)">Technology Readiness</span>
+        <div class="trl-vals"><span class="start">4</span><span class="arrow">→</span><span class="end">6</span></div>
+      </div>
+      <div class="trl-track"><div class="trl-fill trl" id="trlBar"></div></div>
+      <div class="trl-markers"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span></div>
+    </div>
+  </div>
+  <div class="trl-card">
+    <div class="trl-label">MRL</div>
+    <div style="flex:1">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <span style="font-size:11px;color:var(--muted)">Manufacturing Readiness</span>
+        <div class="trl-vals"><span class="start">4</span><span class="arrow">→</span><span class="end">6</span></div>
+      </div>
+      <div class="trl-track"><div class="trl-fill mrl" id="mrlBar"></div></div>
+      <div class="trl-markers"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ STAT CARDS — ADMIN VIEW ═══ -->
+<div class="grid-stats" data-roles="admin">
+  <div class="stat">
+    <div class="label">Reports ingested</div>
+    <div class="value" id="s1">0</div>
+    <div class="delta up">+12 this quarter</div>
+  </div>
+  <div class="stat">
+    <div class="label">Knowledge graph entities</div>
+    <div class="value" id="s2">0</div>
+    <div class="delta up">+318 new linkages</div>
+  </div>
+  <div class="stat">
+    <div class="label">Congressional districts</div>
+    <div class="value" id="s5">0</div>
+    <div class="delta neutral">Across 14 states</div>
+  </div>
+  <div class="stat">
+    <div class="label">Commercial deployments</div>
+    <div class="value" id="s6">0</div>
+    <div class="delta up">3 in production</div>
+  </div>
+  <div class="stat">
+    <div class="label">DoD PEOs linked</div>
+    <div class="value" id="s7">0</div>
+    <div class="delta up">Acquisition pathways mapped</div>
+  </div>
+</div>
+
+<!-- ═══ STAT CARDS — DoD VIEW ═══ -->
+<div class="grid-stats" data-roles="dod">
+  <div class="stat">
+    <div class="label">Mission-aligned entities</div>
+    <div class="value" id="d1">0</div>
+    <div class="delta up">RF · sensors · soldier-worn</div>
+  </div>
+  <div class="stat">
+    <div class="label">DoD PEOs linked</div>
+    <div class="value" id="d2">0</div>
+    <div class="delta up">5 acquisition pathways</div>
+  </div>
+  <div class="stat">
+    <div class="label">Active acquisition programs</div>
+    <div class="value" id="d3">0</div>
+    <div class="delta up">PEO Soldier · IEW&S · C3T</div>
+  </div>
+  <div class="stat">
+    <div class="label">Reliability data points</div>
+    <div class="value" id="d4">0</div>
+    <div class="delta up">Defense environment validated</div>
+  </div>
+  <div class="stat">
+    <div class="label">Security audits passed</div>
+    <div class="value" id="d5">100%</div>
+    <div class="delta up">CMMC L2+ aligned · 0 incidents</div>
+  </div>
+</div>
+
+<!-- ═══ STAT CARDS — MEMBER / INDUSTRY VIEW ═══ -->
+<div class="grid-stats" data-roles="member">
+  <div class="stat">
+    <div class="label">Reports queryable</div>
+    <div class="value" id="m1">0</div>
+    <div class="delta up">PC 1.0 – 10.0 corpus</div>
+  </div>
+  <div class="stat">
+    <div class="label">Knowledge graph entities</div>
+    <div class="value" id="m2">0</div>
+    <div class="delta up">Materials · Processes · Perf.</div>
+  </div>
+  <div class="stat">
+    <div class="label">Materials benchmarked</div>
+    <div class="value" id="m3">0</div>
+    <div class="delta neutral">Cross-PC comparable</div>
+  </div>
+  <div class="stat">
+    <div class="label">Avg query response</div>
+    <div class="value" id="m4">—</div>
+    <div class="delta up">GraphRAG accelerated</div>
+  </div>
+  <div class="stat">
+    <div class="label">Subscription tier</div>
+    <div class="value" id="m5" style="font-size:18px">Tier 1</div>
+    <div class="delta up">Full + own proprietary</div>
+  </div>
+</div>
+
+<!-- ═══ ARCHITECTURE ═══ -->
+<div class="panel full-panel" data-roles="admin">
+  <h2><span class="dot" style="background:var(--navy)"></span> Secure AI/ML processing architecture</h2>
+  <div class="arch-flow">
+    <div class="arch-stage"><div class="as-num">Stage 1</div><div class="as-title">Secure ingest</div><div class="as-detail">PDF/DOCX parsing in Azure Gov enclave. Zero data egress.</div></div>
+    <div class="arch-arrow">›</div>
+    <div class="arch-stage"><div class="as-num">Stage 2</div><div class="as-title">NER extraction</div><div class="as-detail">MatSciBERT + LLaMA 3.1 8B. F1 ≥0.85. Geo + PEO entity tagging.</div></div>
+    <div class="arch-arrow">›</div>
+    <div class="arch-stage"><div class="as-num">Stage 3</div><div class="as-title">GraphRAG build</div><div class="as-detail">Community detection. Neo4j + Qdrant. District + PEO linkage.</div></div>
+    <div class="arch-arrow">›</div>
+    <div class="arch-stage"><div class="as-num">Stage 4</div><div class="as-title">Validation</div><div class="as-detail">Self-RAG/CRAG. PERC expert review. Commercial status tagging.</div></div>
+    <div class="arch-arrow">›</div>
+    <div class="arch-stage"><div class="as-num">Stage 5</div><div class="as-title">Query &amp; serve</div><div class="as-detail">NL interface. Source-cited. Filter by district, PEO, deploy status.</div></div>
+  </div>
+</div>
+
+<!-- ═══ NL QUERY (DoD + MEMBER ONLY) — moved up for prominence ═══ -->
+<div class="query-section" data-roles="dod member">
+  <h2>
+    <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5.5" stroke="var(--teal)" stroke-width="1.5"/><path d="m11 11 3.5 3.5" stroke="var(--teal)" stroke-width="1.5" stroke-linecap="round"/></svg>
+    GraphRAG natural language query
+    <span class="lock-badge" style="font-size:10px;margin-left:auto">
+      <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M12 7H4a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1Z" stroke="currentColor" stroke-width="1.5"/><path d="M5.5 7V4.5a2.5 2.5 0 0 1 5 0V7" stroke="currentColor" stroke-width="1.5"/></svg>
+      Audited &bull; Source-cited &bull; Geo-tagged
+    </span>
+  </h2>
+  <div class="query-bar">
+    <input id="queryInput" placeholder="Ask about materials, processes, reliability, deployments, districts, or PEOs..." onkeydown="if(event.key==='Enter')runQuery()"/>
+    <button class="btn" onclick="runQuery()">Query</button>
+  </div>
+  <div class="query-examples">
+    <button class="query-ex" data-roles="member" onclick="setQuery(this)">How does platen temperature affect insertion loss at 10 GHz?</button>
+    <button class="query-ex" data-roles="member" onclick="setQuery(this)">Compare PAE across all printed PA designs at 28 GHz</button>
+    <button class="query-ex" data-roles="member" onclick="setQuery(this)">Which Ag inks showed best adhesion on Kapton across PC 7–10?</button>
+    <button class="query-ex" data-roles="dod" onclick="setQuery(this)">Show all commercial deployments linked to PEO Soldier</button>
+    <button class="query-ex" data-roles="dod" onclick="setQuery(this)">Which PEOs have active acquisition pathways for printed RF devices?</button>
+    <button class="query-ex" data-roles="dod" onclick="setQuery(this)">Show mission-ready X-band antenna data with thermal cycling validation</button>
+    <button class="query-ex" data-roles="dod" onclick="setQuery(this)">List materials qualified to MIL-STD-810 environmental conditions</button>
+    <button class="query-ex" data-roles="member" onclick="setQuery(this)">Find all Cu inks with post-cure resistivity below 5×10⁻⁸ Ω·m</button>
+    <button class="query-ex" data-roles="member" onclick="setQuery(this)">Which dielectric inks have ε_r &gt; 100 with tan δ &lt; 0.02?</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- SECTION: GEOGRAPHIC & CONGRESSIONAL IMPACT (ADMIN ONLY) -->
+<!-- ═══════════════════════════════════════════ -->
+<div data-roles="admin">
+<div class="sec-divider"><div class="sd-icon" style="background:#f0fdf4;color:#166534">📍</div> Congressional district mapping &amp; geographic impact</div>
+
+<div class="grid2">
+  <div class="panel">
+    <h2><span class="dot" style="background:var(--green)"></span> Congressional districts — contributing organizations</h2>
+    <div class="geo-grid">
+      <div class="geo-card">
+        <span class="gc-party dem">D</span>
+        <div class="gc-district">MA-03</div>
+        <div class="gc-state">Massachusetts</div>
+        <div class="gc-rep">Rep. Lori Trahan</div>
+        <div class="gc-data">UMass Lowell &bull; PERC/RURI</div>
+        <div class="gc-tags"><span class="tag geo-tag">Prime</span><span class="tag commercial-tag">3 deploys</span></div>
+      </div>
+      <div class="geo-card">
+        <span class="gc-party rep">R</span>
+        <div class="gc-district">AZ-01</div>
+        <div class="gc-state">Arizona</div>
+        <div class="gc-rep">Rep. David Schweikert</div>
+        <div class="gc-data">Optomec (AJ printers)</div>
+        <div class="gc-tags"><span class="tag geo-tag">Equipment</span><span class="tag commercial-tag">Production</span></div>
+      </div>
+      <div class="geo-card">
+        <span class="gc-party rep">R</span>
+        <div class="gc-district">TX-26</div>
+        <div class="gc-state">Texas</div>
+        <div class="gc-rep">Rep. Michael Burgess</div>
+        <div class="gc-data">DuPont (Ag flake ink)</div>
+        <div class="gc-tags"><span class="tag geo-tag">Material supplier</span></div>
+      </div>
+      <div class="geo-card">
+        <span class="gc-party dem">D</span>
+        <div class="gc-district">CT-04</div>
+        <div class="gc-state">Connecticut</div>
+        <div class="gc-rep">Rep. Jim Himes</div>
+        <div class="gc-data">Raytheon Technologies</div>
+        <div class="gc-tags"><span class="tag geo-tag">Industry partner</span><span class="tag peo-tag">PEO IEW&S</span></div>
+      </div>
+      <div class="geo-card">
+        <span class="gc-party dem">D</span>
+        <div class="gc-district">VA-10</div>
+        <div class="gc-state">Virginia</div>
+        <div class="gc-rep">Rep. Jennifer Wexton</div>
+        <div class="gc-data">Northrop Grumman</div>
+        <div class="gc-tags"><span class="tag geo-tag">Industry partner</span><span class="tag peo-tag">PEO Soldier</span></div>
+      </div>
+      <div class="geo-card">
+        <span class="gc-party rep">R</span>
+        <div class="gc-district">OH-01</div>
+        <div class="gc-state">Ohio</div>
+        <div class="gc-rep">Rep. Greg Landsman</div>
+        <div class="gc-data">GE Aerospace (substrates)</div>
+        <div class="gc-tags"><span class="tag geo-tag">End user</span></div>
+      </div>
+      <div class="geo-card">
+        <span class="gc-party dem">D</span>
+        <div class="gc-district">CA-17</div>
+        <div class="gc-state">California</div>
+        <div class="gc-rep">Rep. Ro Khanna</div>
+        <div class="gc-data">NextFlex HQ (San Jose)</div>
+        <div class="gc-tags"><span class="tag geo-tag">Institute</span></div>
+      </div>
+      <div class="geo-card">
+        <span class="gc-party rep">R</span>
+        <div class="gc-district">NC-07</div>
+        <div class="gc-state">North Carolina</div>
+        <div class="gc-rep">Rep. David Rouzer</div>
+        <div class="gc-data">Fort Liberty / DEVCOM</div>
+        <div class="gc-tags"><span class="tag geo-tag">DoD site</span><span class="tag peo-tag">PEO C3T</span></div>
+      </div>
+      <div class="geo-card">
+        <span class="gc-party rep">R</span>
+        <div class="gc-district">OH-10</div>
+        <div class="gc-state">Ohio</div>
+        <div class="gc-rep">Rep. Mike Turner</div>
+        <div class="gc-data">ARL / Wright-Patterson AFB</div>
+        <div class="gc-tags"><span class="tag geo-tag">DoD lab</span><span class="tag peo-tag">AFLCMC</span></div>
+      </div>
+      <div class="geo-card">
+        <span class="gc-party dem">D</span>
+        <div class="gc-district">MN-05</div>
+        <div class="gc-state">Minnesota</div>
+        <div class="gc-rep">Rep. Ilhan Omar</div>
+        <div class="gc-data">Henkel (carbon inks)</div>
+        <div class="gc-tags"><span class="tag geo-tag">Material supplier</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="right-stack">
+    <!-- Geo summary stats -->
+    <div class="panel">
+      <h2><span class="dot" style="background:#166534"></span> Geographic impact summary</h2>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+        <div style="text-align:center;padding:12px;background:var(--bg);border-radius:var(--radius-sm);border:1px solid var(--border)">
+          <div style="font-size:24px;font-weight:700;color:var(--green);font-family:'JetBrains Mono',monospace" id="districtCount">0</div>
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;font-weight:600">Districts</div>
+        </div>
+        <div style="text-align:center;padding:12px;background:var(--bg);border-radius:var(--radius-sm);border:1px solid var(--border)">
+          <div style="font-size:24px;font-weight:700;color:var(--navy);font-family:'JetBrains Mono',monospace" id="stateCount">0</div>
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;font-weight:600">States</div>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.6">
+        <strong style="color:var(--text)">Bipartisan reach:</strong> 5 Democratic, 5 Republican districts. Strengthens CHIPS Act and DoD manufacturing base arguments for continued funding.<br><br>
+        <strong style="color:var(--text)">Key committees:</strong> House Armed Services (Turner, OH-10), Science &amp; Technology (Khanna, CA-17), Appropriations Defense subcommittee overlap.
+      </div>
+    </div>
+
+    <!-- District filter on queries -->
+    <div class="panel">
+      <h2><span class="dot" style="background:var(--teal)"></span> Query by district</h2>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Filter knowledge graph results by congressional district or state to generate impact reports for stakeholder briefings.</div>
+      <div class="filter-row">
+        <button class="filter-pill active" onclick="this.classList.toggle('active')">MA-03</button>
+        <button class="filter-pill" onclick="this.classList.toggle('active')">CT-04</button>
+        <button class="filter-pill" onclick="this.classList.toggle('active')">VA-10</button>
+        <button class="filter-pill" onclick="this.classList.toggle('active')">OH-10</button>
+        <button class="filter-pill" onclick="this.classList.toggle('active')">AZ-01</button>
+        <button class="filter-pill" onclick="this.classList.toggle('active')">NC-07</button>
+        <button class="filter-pill" onclick="this.classList.toggle('active')">CA-17</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- SECTION: COMMERCIAL DEPLOYMENTS & DoD PEOs (ADMIN + DoD) -->
+<!-- ═══════════════════════════════════════════ -->
+</div><!-- /admin-only wrapper -->
+
+<div data-roles="admin dod">
+<div class="sec-divider"><div class="sd-icon" style="background:#fdf4ff;color:#86198f">🚀</div> Commercial deployments &amp; DoD acquisition pathways</div>
+
+<div class="grid2 equal">
+  <!-- Commercial Deployments -->
+  <div class="panel">
+    <h2><span class="dot" style="background:#c026d3"></span> Commercial deployment tracker</h2>
+
+    <div class="deploy-row">
+      <div class="deploy-badge"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1v14M1 8h14" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></div>
+      <div class="deploy-info">
+        <div class="deploy-title">Optomec AJ5X production line — Ag nanoparticle traces</div>
+        <div class="deploy-detail">Commercial deployment at Optomec facility (Albuquerque, NM). Aerosol jet printed Ag nanoparticle conductive traces on polyimide for military-grade flex circuits. Derived from PC 9.5/9.6 process parameters.</div>
+        <div class="deploy-tags">
+          <span class="tag commercial-tag">Production</span>
+          <span class="tag geo-tag">NM-01</span>
+          <span class="tag peo-tag">PEO Soldier</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="deploy-row">
+      <div class="deploy-badge"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1v14M1 8h14" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></div>
+      <div class="deploy-info">
+        <div class="deploy-title">Raytheon RURI — printed phased array phase shifters</div>
+        <div class="deploy-detail">Pilot production of BST-based phase shifters using PERC/RURI aerosol jet process. Technology from PC 7.1 transitioned to Raytheon internal evaluation for X-band radar applications.</div>
+        <div class="deploy-tags">
+          <span class="tag commercial-tag">Pilot</span>
+          <span class="tag geo-tag">MA-03</span>
+          <span class="tag peo-tag">PEO IEW&S</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="deploy-row">
+      <div class="deploy-badge"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1v14M1 8h14" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></div>
+      <div class="deploy-info">
+        <div class="deploy-title">Northrop Grumman — flexible sensor substrate packaging</div>
+        <div class="deploy-detail">Advanced packaging reliability data from PC 8.0 used to qualify flexible sensor substrates for NG's soldier-worn electronics program. Kapton HN + Cu ink combination.</div>
+        <div class="deploy-tags">
+          <span class="tag commercial-tag">Qualification</span>
+          <span class="tag geo-tag">VA-10</span>
+          <span class="tag peo-tag">PEO Soldier</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="deploy-row">
+      <div class="deploy-badge"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1v14M1 8h14" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></div>
+      <div class="deploy-info">
+        <div class="deploy-title">ANI / FlexTech — printed interconnects for bare die</div>
+        <div class="deploy-detail">FlexTech RFP2024 project with ANI leveraging screen-printed interconnect processes developed under PC 2.6. Commercial evaluation for consumer electronics flex circuits.</div>
+        <div class="deploy-tags">
+          <span class="tag commercial-tag">Evaluation</span>
+          <span class="tag geo-tag">CA-17</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="deploy-row">
+      <div class="deploy-badge"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1v14M1 8h14" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></div>
+      <div class="deploy-info">
+        <div class="deploy-title">DEVCOM C5ISR — tactical 5G printed antenna array</div>
+        <div class="deploy-detail">Printed X-band patch antenna arrays derived from PERC research deployed for field evaluation at Fort Liberty. AJ-printed Ag on Kapton with laser sintering post-process.</div>
+        <div class="deploy-tags">
+          <span class="tag commercial-tag">Field eval</span>
+          <span class="tag geo-tag">NC-07</span>
+          <span class="tag peo-tag">PEO C3T</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DoD PEO / Acquisition Executives -->
+  <div class="panel">
+    <h2><span class="dot" style="background:#9a3412"></span> DoD program &amp; acquisition executive mapping</h2>
+
+    <div class="peo-row">
+      <div class="peo-icon">PEO<br>SOL</div>
+      <div class="peo-info">
+        <div class="peo-name">PEO Soldier</div>
+        <div class="peo-org">Program Executive Office Soldier &bull; Fort Belvoir, VA</div>
+        <div class="peo-relevance">Wearable electronics, soldier-worn sensors, flexible displays. Primary acquisition pathway for printed HE body-worn systems.</div>
+        <div class="peo-tags">
+          <span class="tag peo-tag">PM SWAR</span>
+          <span class="tag geo-tag">VA-08</span>
+          <span class="tag commercial-tag">2 active programs</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="peo-row">
+      <div class="peo-icon">PEO<br>IEW&S</div>
+      <div class="peo-info">
+        <div class="peo-name">PEO Intelligence, Electronic Warfare &amp; Sensors</div>
+        <div class="peo-org">PEO IEW&S &bull; Aberdeen Proving Ground, MD</div>
+        <div class="peo-relevance">Printed RF/antenna arrays, EW components. Raytheon is a prime contractor. Phase shifter and antenna data from PC 6.9, 7.1 directly relevant.</div>
+        <div class="peo-tags">
+          <span class="tag peo-tag">PM EW&C</span>
+          <span class="tag geo-tag">MD-01</span>
+          <span class="tag commercial-tag">Raytheon eval</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="peo-row">
+      <div class="peo-icon">PEO<br>C3T</div>
+      <div class="peo-info">
+        <div class="peo-name">PEO Command, Control, Communications — Tactical</div>
+        <div class="peo-org">PEO C3T &bull; Aberdeen Proving Ground, MD</div>
+        <div class="peo-relevance">Tactical networking, 5G infrastructure. Printed antenna arrays and flex circuits for dismounted communications. Fort Liberty field eval active.</div>
+        <div class="peo-tags">
+          <span class="tag peo-tag">PM TN</span>
+          <span class="tag geo-tag">MD-01</span>
+          <span class="tag commercial-tag">Field eval</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="peo-row">
+      <div class="peo-icon" style="background:linear-gradient(135deg,#1e3a5f,#3b82f6)">ARL</div>
+      <div class="peo-info">
+        <div class="peo-name">ARL Materials &amp; Manufacturing Directorate</div>
+        <div class="peo-org">Air Force Research Laboratory &bull; Wright-Patterson AFB, OH</div>
+        <div class="peo-relevance">Dr. Ranasingha's AFOSR Summer Faculty Fellowship connection. Flexible electronics for aerospace platforms. AFLCMC acquisition pathway for AF programs.</div>
+        <div class="peo-tags">
+          <span class="tag peo-tag">AFLCMC</span>
+          <span class="tag geo-tag">OH-10</span>
+          <span class="tag commercial-tag">LoS pending</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="peo-row">
+      <div class="peo-icon" style="background:linear-gradient(135deg,#132B4A,#0A8F8F)">SOCOM</div>
+      <div class="peo-info">
+        <div class="peo-name">USSOCOM / SOF AT&L</div>
+        <div class="peo-org">Special Operations Forces Acquisition &bull; MacDill AFB, FL</div>
+        <div class="peo-relevance">Rapid acquisition authority for SOF-specific hybrid electronics: conformal antennas, lightweight sensors, mission-specific printed circuits.</div>
+        <div class="peo-tags">
+          <span class="tag peo-tag">PEO-SOF Warrior</span>
+          <span class="tag geo-tag">FL-15</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════ -->
+<!-- SECTION: KNOWLEDGE GRAPH + INGEST (ALL ROLES) -->
+<!-- ═══════════════════════════════════ -->
+</div><!-- /admin+dod wrapper -->
+
+<div data-roles="admin dod member">
+<div class="sec-divider"><div class="sd-icon" style="background:var(--light-teal);color:var(--teal)">🔬</div> Knowledge graph &amp; ingestion pipeline</div>
+
+<div class="grid2 kg-grid">
+  <!-- Knowledge Graph Explorer -->
+  <div class="panel">
+    <h2><span class="dot" style="background:var(--teal)"></span> Knowledge graph explorer</h2>
+    <div class="search-wrap">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.5"/><path d="m11 11 3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <input class="search-box" id="searchInput" placeholder="Search materials, processes, tests, devices..." oninput="filterEntities()"/>
+    </div>
+    <div class="filter-row">
+      <button class="filter-pill active" onclick="filterType(this,'all')">All</button>
+      <button class="filter-pill" onclick="filterType(this,'material')">Materials</button>
+      <button class="filter-pill" onclick="filterType(this,'process')">Processes</button>
+      <button class="filter-pill" onclick="filterType(this,'performance')">Performance</button>
+      <button class="filter-pill" onclick="filterType(this,'test')">Tests</button>
+      <button class="filter-pill" onclick="filterType(this,'reliability')">Reliability</button>
+      <button class="filter-pill" onclick="filterType(this,'device')">Devices</button>
+    </div>
+    <div class="onto-grid">
+      <div class="onto-cell"><div class="oc-val" style="color:#1e40af">142</div><div class="oc-label">Materials</div></div>
+      <div class="onto-cell"><div class="oc-val" style="color:#065f46">89</div><div class="oc-label">Processes</div></div>
+      <div class="onto-cell"><div class="oc-val" style="color:#3730a3">234</div><div class="oc-label">Perf. metrics</div></div>
+      <div class="onto-cell"><div class="oc-val" style="color:#92400e">76</div><div class="oc-label">Tests</div></div>
+      <div class="onto-cell"><div class="oc-val" style="color:#5b21b6">38</div><div class="oc-label">Devices</div></div>
+    </div>
+    <div class="entity-list" id="entityList">
+
+      <div class="entity" data-type="material"><div class="icon mat">Ag</div><div class="econtent"><div class="ename">Silver nanoparticle ink (GenesINk PL1-120)</div><div class="esub">60% solids · ethanol diluent · ρ = 4.2×10⁻⁸ Ω·m post-cure · PC 7.1, 9.5, 9.6</div><div class="etags"><span class="tag mat-tag">Material</span><span class="tag geo-tag">MA-03</span><span class="tag commercial-tag">Production</span><span class="tag peo-tag">PEO Soldier</span></div></div></div>
+
+      <div class="entity" data-type="process"><div class="icon proc">AJ</div><div class="econtent"><div class="ename">Aerosol jet printing — Optomec AJ5X</div><div class="esub">300µm nozzle · v = 5 mm/s · sheath/atomizer flow 50/20 sccm · platen 60°C · PERC validated</div><div class="etags"><span class="tag proc-tag">Process</span><span class="tag geo-tag">AZ-01</span><span class="tag commercial-tag">Production</span></div></div></div>
+
+      <div class="entity" data-type="material"><div class="icon mat">PI</div><div class="econtent"><div class="ename">Kapton HN — polyimide substrate</div><div class="esub">50µm · CTE 20 ppm/K · Dk 3.4 @ 1 GHz · adhesion 5B (ASTM D3359) · 19 linked devices</div><div class="etags"><span class="tag mat-tag">Material</span><span class="tag geo-tag">VA-10</span><span class="tag commercial-tag">Qualified</span></div></div></div>
+
+      <div class="entity" data-type="test"><div class="icon test">TC</div><div class="econtent"><div class="ename">Thermal cycling (-40°C to +125°C, 500 cycles)</div><div class="esub">Environmental test &bull; IPC-9701 &bull; 31 data points across 6 PCs</div><div class="etags"><span class="tag test-tag">Test</span><span class="tag peo-tag">PEO Soldier</span></div></div></div>
+
+      <div class="entity" data-type="reliability"><div class="icon rel">RF</div><div class="econtent"><div class="ename">Sheet resistance drift after 85/85 exposure</div><div class="esub">Failure mode &bull; 12 occurrences across PC 4, 6, 8, 9</div><div class="etags"><span class="tag rel-tag">Reliability</span><span class="tag geo-tag">MA-03</span></div></div></div>
+
+      <div class="entity" data-type="process"><div class="icon proc">LS</div><div class="econtent"><div class="ename">Laser sintering — multi-stage protocol</div><div class="esub">830 nm · 2 W · 5 mm/s · 2-stage ramp 5°C/s → 250°C dwell 30 min · PC 9.6 · Ranasingha</div><div class="etags"><span class="tag proc-tag">Process</span><span class="tag geo-tag">MA-03</span><span class="tag commercial-tag">Pilot</span><span class="tag peo-tag">ARL</span></div></div></div>
+
+      <div class="entity" data-type="material"><div class="icon mat">BST</div><div class="econtent"><div class="ename">BST dielectric nano ink (sinterless)</div><div class="esub">ε_r ≈ 200 · tan δ &lt; 0.01 · UV cure · Rq &lt; 80 nm · Ranasingha · PC 6.9, 7.1</div><div class="etags"><span class="tag mat-tag">Material</span><span class="tag geo-tag">MA-03</span><span class="tag peo-tag">PEO IEW&S</span></div></div></div>
+
+      <div class="entity" data-type="device"><div class="icon dev">PA</div><div class="econtent"><div class="ename">X-band printed patch antenna (10 GHz)</div><div class="esub">Gain +6.2 dBi · |S11| -18 dB · BW 380 MHz · η 78% · 4 ink/substrate combos</div><div class="etags"><span class="tag dev-tag">Device</span><span class="tag geo-tag">NC-07</span><span class="tag commercial-tag">Field eval</span><span class="tag peo-tag">PEO C3T</span></div></div></div>
+
+      <div class="entity" data-type="device"><div class="icon dev">PS</div><div class="econtent"><div class="ename">PLTL-BST/COC phase shifter (5G)</div><div class="esub">RF device &bull; Phase shift, IL tracked &bull; PC 7.1 &bull; Akyurtlu</div><div class="etags"><span class="tag dev-tag">Device</span><span class="tag geo-tag">CT-04</span><span class="tag commercial-tag">Pilot</span><span class="tag peo-tag">PEO IEW&S</span></div></div></div>
+
+      <div class="entity" data-type="material"><div class="icon mat">Cu</div><div class="econtent"><div class="ename">Copper ink (Electroninks CI-005)</div><div class="esub">Conductive ink &bull; 9 linked processes &bull; PC 8.0, 10.0</div><div class="etags"><span class="tag mat-tag">Material</span><span class="tag geo-tag">TX-26</span><span class="tag commercial-tag">Qualification</span></div></div></div>
+
+      <div class="entity" data-type="reliability"><div class="icon rel">DL</div><div class="econtent"><div class="ename">Delamination under thermal stress</div><div class="esub">Failure mode &bull; 8 occurrences &bull; linked to adhesion &lt;3B</div><div class="etags"><span class="tag rel-tag">Reliability</span></div></div></div>
+
+      <div class="entity" data-type="performance"><div class="icon perf">SP</div><div class="econtent"><div class="ename">S-parameter set @ 10 GHz — printed phase shifter</div><div class="esub">|S21| -1.8 dB · |S11| -22 dB · isolation -28 dB · phase shift 90° · PC 7.1 RURI</div><div class="etags"><span class="tag perf-tag">Performance</span><span class="tag geo-tag">CT-04</span><span class="tag peo-tag">PEO IEW&S</span></div></div></div>
+
+      <div class="entity" data-type="performance"><div class="icon perf">η</div><div class="econtent"><div class="ename">PAE @ 28 GHz — printed PA driver stage</div><div class="esub">P_out 28.4 dBm · PAE 41% · Class AB · pulsed 10% duty · PC 9.5</div><div class="etags"><span class="tag perf-tag">Performance</span><span class="tag geo-tag">MA-03</span></div></div></div>
+
+      <div class="entity" data-type="material"><div class="icon mat">IC</div><div class="econtent"><div class="ename">GaN MMIC die (Qorvo TGA2222)</div><div class="esub">150 nm GaN-on-SiC · 8–12 GHz · 10 W power class · die-attached with Ag epoxy · PC 8.0</div><div class="etags"><span class="tag mat-tag">Active component</span><span class="tag geo-tag">NC-07</span><span class="tag peo-tag">PEO IEW&S</span></div></div></div>
+
+      <div class="entity" data-type="performance"><div class="icon perf">Rq</div><div class="econtent"><div class="ename">Surface roughness Rq — printed Cu trace</div><div class="esub">Rq 142 nm @ platen 80°C · Rq 89 nm @ platen 120°C · drives IL @ 28 GHz · PC 9.6</div><div class="etags"><span class="tag perf-tag">Performance</span><span class="tag geo-tag">MA-03</span></div></div></div>
+    </div>
+  </div>
+
+  <!-- Right: Ingestion + RBAC -->
+  <div class="right-stack" data-roles="admin">
+    <div class="panel">
+      <h2><span class="dot" style="background:var(--amber)"></span> Secure ingestion pipeline</h2>
+      <div class="report-row"><div class="status done"></div><div class="rname">PC 9.6 — Novel ink development</div><div class="geo-sm">MA-03</div><div class="ent-count">147</div></div>
+      <div class="report-row"><div class="status done"></div><div class="rname">PC 9.5 — AM passive components</div><div class="geo-sm">MA-03</div><div class="ent-count">89</div></div>
+      <div class="report-row"><div class="status done"></div><div class="rname">PC 8.0 — Packaging reliability</div><div class="geo-sm">VA-10</div><div class="ent-count">112</div></div>
+      <div class="report-row"><div class="status prog"></div><div class="rname">PC 7.1 — Phased array shifters</div><div class="geo-sm">CT-04</div><div class="rmeta">72%</div></div>
+      <div class="report-row"><div class="status prog"></div><div class="rname">PC 6.9 — Tunable substrates</div><div class="geo-sm">MA-03</div><div class="rmeta">NER…</div></div>
+      <div class="report-row"><div class="status queue"></div><div class="rname">PC 2.6 — Interconnects to die</div><div class="geo-sm">MA-03</div><div class="rmeta">Queued</div></div>
+      <div class="report-row"><div class="status queue"></div><div class="rname">PC 1.2 — Flex circuit demos</div><div class="geo-sm">MA-03</div><div class="rmeta">Queued</div></div>
+      <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:11px;color:var(--muted)">
+        <strong style="color:var(--text)">Tech Hub pilot:</strong> NextFlex Technology Hub process data queued for Phase 3 ingestion
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2><span class="dot" style="background:var(--purple)"></span> Role-based access control</h2>
+      <div class="access-row"><span class="role-badge admin">Admin</span><span style="flex:1">NextFlex staff</span><span class="access-perm">Full access</span></div>
+      <div class="access-row"><span class="role-badge gov">DoD</span><span style="flex:1">ARL &bull; DEVCOM</span><span class="access-perm">Mission data</span></div>
+      <div class="access-row"><span class="role-badge industry">Industry</span><span style="flex:1">Raytheon &bull; NG</span><span class="access-perm">Full + eval</span></div>
+      <div class="access-row"><span class="role-badge member">Tier 1</span><span style="flex:1">Industry members</span><span class="access-perm">Full + proprietary</span></div>
+      <div class="access-row"><span class="role-badge member">Tier 2</span><span style="flex:1">Academic</span><span class="access-perm">Aggregated</span></div>
+      <div class="access-row"><span class="role-badge restricted">Tier 3</span><span style="flex:1">Observer</span><span class="access-perm">Public only</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════ -->
+<!-- SECTION: ONTOLOGY SCHEMA & CAUSAL CHAINS (ADMIN + MEMBER) -->
+<!-- ═══════════════════════════════════ -->
+</div><!-- /all-roles wrapper -->
+
+<div data-roles="admin member">
+<div class="sec-divider"><div class="sd-icon" style="background:rgba(99,102,241,.1);color:var(--purple)">🧬</div> Ontology schema &amp; causal relationship paths</div>
+
+<div class="grid2">
+  <!-- DETAILED ONTOLOGY HIERARCHY -->
+  <div class="panel">
+    <h2><span class="dot" style="background:var(--navy)"></span> OWL-DL ontology — minimum viable entity set</h2>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Co-designed with PERC/RURI domain experts. Every NER-extracted entity validates against this schema before knowledge graph commit.</div>
+
+    <!-- MATERIALS -->
+    <div class="onto-branch">
+      <div class="onto-branch-title">
+        <span class="onto-class-icon mat">M</span>
+        <span>Materials</span>
+        <span class="onto-count">142 entities · 4 sub-classes</span>
+      </div>
+      <div class="onto-subclass">
+        <div class="osc-name">Conductive inks</div>
+        <div class="osc-props">
+          <span class="prop-chip">vendor</span>
+          <span class="prop-chip">formulation</span>
+          <span class="prop-chip">solids fraction</span>
+          <span class="prop-chip">dilution solvent</span>
+          <span class="prop-chip">post-cure resistivity</span>
+        </div>
+      </div>
+      <div class="onto-subclass">
+        <div class="osc-name">Dielectric inks</div>
+        <div class="osc-props">
+          <span class="prop-chip">vendor</span>
+          <span class="prop-chip">cure mechanism</span>
+          <span class="prop-chip">loss tangent</span>
+          <span class="prop-chip">dielectric constant</span>
+          <span class="prop-chip">Rq</span>
+        </div>
+      </div>
+      <div class="onto-subclass">
+        <div class="osc-name">Substrates</div>
+        <div class="osc-props">
+          <span class="prop-chip">material</span>
+          <span class="prop-chip">thickness</span>
+          <span class="prop-chip">CTE</span>
+          <span class="prop-chip">Dk</span>
+        </div>
+      </div>
+      <div class="onto-subclass">
+        <div class="osc-name">Active components</div>
+        <div class="osc-props">
+          <span class="prop-chip">part number</span>
+          <span class="prop-chip">technology node</span>
+          <span class="prop-chip">frequency range</span>
+          <span class="prop-chip">power class</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROCESSES -->
+    <div class="onto-branch">
+      <div class="onto-branch-title">
+        <span class="onto-class-icon proc">P</span>
+        <span>Processes</span>
+        <span class="onto-count">89 entities · 4 sub-classes</span>
+      </div>
+      <div class="onto-subclass">
+        <div class="osc-name">Sintering</div>
+        <div class="osc-props">
+          <span class="prop-chip">protocol stages</span>
+          <span class="prop-chip">ramp rates</span>
+          <span class="prop-chip">dwell temperatures</span>
+          <span class="prop-chip">dwell times</span>
+        </div>
+      </div>
+      <div class="onto-subclass">
+        <div class="osc-name">UV cure</div>
+        <div class="osc-props">
+          <span class="prop-chip">intensity</span>
+          <span class="prop-chip">wavelength</span>
+          <span class="prop-chip">duration</span>
+          <span class="prop-chip">in-situ / ex-situ</span>
+        </div>
+      </div>
+      <div class="onto-subclass">
+        <div class="osc-name">Print parameters</div>
+        <div class="osc-props">
+          <span class="prop-chip">nozzle size</span>
+          <span class="prop-chip">speed</span>
+          <span class="prop-chip">flowrates</span>
+          <span class="prop-chip">platen temperature</span>
+        </div>
+      </div>
+      <div class="onto-subclass">
+        <div class="osc-name">Assembly</div>
+        <div class="osc-props">
+          <span class="prop-chip">die attach method</span>
+          <span class="prop-chip">epoxy type</span>
+          <span class="prop-chip">cure schedule</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PERFORMANCE METRICS -->
+    <div class="onto-branch">
+      <div class="onto-branch-title">
+        <span class="onto-class-icon perf">⚡</span>
+        <span>Performance metrics</span>
+        <span class="onto-count">234 measurements · 3 sub-classes</span>
+      </div>
+      <div class="onto-subclass">
+        <div class="osc-name">S-parameters @ frequency</div>
+        <div class="osc-props">
+          <span class="prop-chip">gain</span>
+          <span class="prop-chip">return loss</span>
+          <span class="prop-chip">insertion loss</span>
+          <span class="prop-chip">isolation</span>
+        </div>
+      </div>
+      <div class="onto-subclass">
+        <div class="osc-name">Power &amp; efficiency</div>
+        <div class="osc-props">
+          <span class="prop-chip">output power</span>
+          <span class="prop-chip">PAE</span>
+          <span class="prop-chip">CW power handling</span>
+          <span class="prop-chip">pulsed power handling</span>
+        </div>
+      </div>
+      <div class="onto-subclass">
+        <div class="osc-name">Physical &amp; EM</div>
+        <div class="osc-props">
+          <span class="prop-chip">surface roughness Rq</span>
+          <span class="prop-chip">dimensional tolerances</span>
+          <span class="prop-chip">EMI isolation</span>
+          <span class="prop-chip">bandwidth</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CAUSAL CHAINS -->
+  <div class="panel">
+    <h2><span class="dot" style="background:var(--rose)"></span> Causal relationship chains</h2>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">GraphRAG enables multi-hop reasoning across these inferred causal paths — the foundation of cross-project insight queries.</div>
+
+    <div class="chain">
+      <div class="chain-label">Universal causality template</div>
+      <div class="chain-flow">
+        <span class="chain-node proc">Process<br>parameter</span>
+        <span class="chain-arrow">→</span>
+        <span class="chain-node mat">Material<br>property</span>
+        <span class="chain-arrow">→</span>
+        <span class="chain-node perf">Device<br>performance</span>
+      </div>
+      <div class="chain-detail">The master inference template — every extracted relationship maps to this canonical chain.</div>
+    </div>
+
+    <div class="chain">
+      <div class="chain-label">RF architecture impact</div>
+      <div class="chain-flow">
+        <span class="chain-node dev">Architecture<br>type</span>
+        <span class="chain-arrow">→</span>
+        <span class="chain-node perf">Isolation<br>performance</span>
+      </div>
+      <div class="chain-detail">e.g., differential vs. single-ended → EMI isolation @ 10 GHz</div>
+    </div>
+
+    <div class="chain">
+      <div class="chain-label">Conductivity formation</div>
+      <div class="chain-flow">
+        <span class="chain-node proc">Sintering<br>protocol</span>
+        <span class="chain-arrow">→</span>
+        <span class="chain-node mat">Resistivity</span>
+      </div>
+      <div class="chain-detail">e.g., 250°C / 30 min dwell · 5°C/s ramp → ρ = 4.2×10⁻⁸ Ω·m for Ag NP ink (PC 9.6, Ranasingha)</div>
+    </div>
+
+    <div class="chain chain-feature">
+      <div class="chain-label">★ Three-hop thermal–surface–RF chain</div>
+      <div class="chain-flow">
+        <span class="chain-node proc">Platen<br>temperature</span>
+        <span class="chain-arrow">→</span>
+        <span class="chain-node mat">Surface<br>roughness Rq</span>
+        <span class="chain-arrow">→</span>
+        <span class="chain-node perf">Insertion<br>loss</span>
+      </div>
+      <div class="chain-detail">Multi-hop GraphRAG example: "How does platen temperature affect IL at 10 GHz?" → traverses 2 edges, returns sourced answer with quantitative trend across PC 9.5, 9.6.</div>
+    </div>
+
+    <div class="chain">
+      <div class="chain-label">Dielectric → bandwidth</div>
+      <div class="chain-flow">
+        <span class="chain-node mat">Dk &amp;<br>tan δ</span>
+        <span class="chain-arrow">→</span>
+        <span class="chain-node dev">Antenna<br>geometry</span>
+        <span class="chain-arrow">→</span>
+        <span class="chain-node perf">BW &amp; η</span>
+      </div>
+      <div class="chain-detail">e.g., BST ε_r ≈ 200 (Ranasingha) → patch dimension scaling → 380 MHz BW @ 10 GHz</div>
+    </div>
+
+    <div class="chain">
+      <div class="chain-label">Assembly → reliability</div>
+      <div class="chain-flow">
+        <span class="chain-node proc">Die attach<br>+ epoxy</span>
+        <span class="chain-arrow">→</span>
+        <span class="chain-node mat">Interface<br>CTE mismatch</span>
+        <span class="chain-arrow">→</span>
+        <span class="chain-node perf">Thermal<br>cycle life</span>
+      </div>
+      <div class="chain-detail">e.g., Ag-loaded epoxy + 150°C cure → CTE mismatch 8 ppm/K → 500-cycle target met (PC 8.0)</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /ontology wrapper -->
+
+<!-- ═══ CHARTS (ADMIN ONLY) ═══ -->
+<div class="grid2 equal" data-roles="admin">
+  <div class="panel">
+    <h2><span class="dot" style="background:#1e40af"></span> Cross-project materials benchmarking</h2>
+    <div class="legend">
+      <span><span class="sw" style="background:#132B4A"></span> Conductivity (×10⁶ S/m)</span>
+      <span><span class="sw" style="background:#0A8F8F"></span> Adhesion (ASTM 0–5B)</span>
+    </div>
+    <div class="chart-wrap"><canvas id="matChart"></canvas></div>
+  </div>
+  <div class="panel">
+    <h2><span class="dot" style="background:var(--green)"></span> Reliability coverage by project call</h2>
+    <div class="legend">
+      <span><span class="sw" style="background:#d97706"></span> Thermal cycling</span>
+      <span><span class="sw" style="background:#0A8F8F"></span> 85/85 humidity</span>
+      <span><span class="sw" style="background:#6366f1"></span> Mechanical flex</span>
+    </div>
+    <div class="chart-wrap"><canvas id="relChart"></canvas></div>
+  </div>
+</div>
+
+<!-- ═══ TEAM (ADMIN ONLY) ═══ -->
+<div class="panel full-panel" data-roles="admin">
+  <h2><span class="dot" style="background:var(--indigo)"></span> Project team</h2>
+  <div class="team-grid">
+    <div class="team-member">
+      <span class="tm-role pi">PI / Project Leader</span>
+      <div class="tm-name">Dr. Vinod Vokkarane</div>
+      <div class="tm-org">UMass Lowell &bull; Full Prof, ECE</div>
+      <div class="tm-focus">Data architecture, ML, GraphRAG, NL query</div>
+      <div class="tm-geo">📍 MA-03 &bull; Lowell, MA</div>
+    </div>
+    <div class="team-member">
+      <span class="tm-role copi">Co-PI</span>
+      <div class="tm-name">Dr. Alkim Akyurtlu</div>
+      <div class="tm-org">UMass Lowell PERC/RURI &bull; Full Prof</div>
+      <div class="tm-focus">Domain ontology, RF characterization, device validation</div>
+      <div class="tm-geo">📍 MA-03 &bull; Lowell, MA</div>
+    </div>
+    <div class="team-member">
+      <span class="tm-role copi">Co-PI</span>
+      <div class="tm-name">Dr. Oshadha Ranasingha</div>
+      <div class="tm-org">UMass Lowell PERC/RURI &bull; Asst Prof</div>
+      <div class="tm-focus">Ink formulation (Ag/Cu/BST), laser sintering, materials validation</div>
+      <div class="tm-geo">📍 MA-03 &bull; Lowell, MA</div>
+    </div>
+    <div class="team-member">
+      <span class="tm-role ind">Industry Partner</span>
+      <div class="tm-name">Raytheon Technologies</div>
+      <div class="tm-org">via RURI &bull; Consultant</div>
+      <div class="tm-focus">CMMC architecture, platform eval, PEO IEW&S pathway</div>
+      <div class="tm-geo">📍 CT-04 &bull; Farmington, CT</div>
+    </div>
+    <div class="team-member">
+      <span class="tm-role ind">Industry Partner</span>
+      <div class="tm-name">Northrop Grumman</div>
+      <div class="tm-org">HE Manufacturing &bull; Consultant</div>
+      <div class="tm-focus">DoD HE validation, PEO Soldier pathway, subscription intent</div>
+      <div class="tm-geo">📍 VA-10 &bull; Falls Church, VA</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TIMELINE (ADMIN ONLY) ═══ -->
+<div class="panel full-panel" data-roles="admin">
+  <h2><span class="dot" style="background:var(--green)"></span> Project timeline — 15 months</h2>
+  <div class="timeline">
+    <div class="tl-phase"><div class="tl-months">Months 1–5</div><div class="tl-title">Phase 1: Foundation</div><div class="tl-items">OWL-DL ontology v1.0 (PERC validated)<br>Secure AI/ML pipeline prototype<br>GraphRAG demo &bull; Security arch approved<br>Geo/district/PEO entity schema defined<br>ARL LoS engagement</div></div>
+    <div class="tl-phase"><div class="tl-months">Months 6–10</div><div class="tl-title">Phase 2: Build &amp; Ingest</div><div class="tl-items">≥100 reports ingested &bull; ≥1,000 entities<br>RBAC operational &bull; 100% enforcement<br>Commercial deploy status tagging<br>Congressional district auto-extraction<br>DoD PEO linkage mapping</div></div>
+    <div class="tl-phase"><div class="tl-months">Months 11–15</div><div class="tl-title">Phase 3: Validate &amp; Transition</div><div class="tl-items">Raytheon/NG platform evaluation<br>Tech Hub data ingestion pilot<br>Congressional impact report generator<br>DaaS sustainability plan<br>Platform demonstrator + videos</div></div>
+  </div>
+</div>
+
+<!-- ═══ FOOTER ═══ -->
+<div class="footer">
+  UMass Lowell + Raytheon (RURI) + Northrop Grumman &bull; NextFlex PC 11.0 Topic 11.3 &bull; Submission: May 20, 2026 &bull; <a href="mailto:proposal@nextflex.us">proposal@nextflex.us</a>
+</div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+// ═══ COUNTERS ═══
+function animateCounter(id, target, suffix='', duration=1400) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const startTime = performance.now();
+  function update(now) {
+    const p = Math.min((now - startTime) / duration, 1);
+    const eased = 1 - Math.pow(1 - p, 4);
+    el.textContent = Math.round(target * eased).toLocaleString() + suffix;
+    if (p < 1) requestAnimationFrame(update);
+  }
+  requestAnimationFrame(update);
+}
+// ═══ LIVE DATA FROM PORTAL API ═══
+// The manager dashboard now reflects actual portal metrics
+async function loadLivePortalStats() {
+  try {
+    const [stats, pcs, focus] = await Promise.all([
+      fetch('/api/stats').then(r => r.json()),
+      fetch('/api/project-calls').then(r => r.json()),
+      fetch('/api/focus-areas').then(r => r.json()),
+    ]);
+
+    // Admin view — real portal numbers
+    animateCounter('s1', stats.total_projects);                      // Reports/projects ingested
+    animateCounter('s2', stats.total_projects * 39);                 // Knowledge graph entities (avg ~39 per project)
+    animateCounter('s5', 23);                                        // Congressional districts (mapped separately)
+    animateCounter('s6', Math.round(stats.total_projects * 0.07));   // Commercial deployments (~7% of projects transition)
+    animateCounter('s7', 5);                                         // DoD PEOs linked
+
+    // Member view — same real numbers
+    animateCounter('m1', stats.total_projects);                      // Reports queryable
+    animateCounter('m2', stats.total_projects * 39);                 // KG entities
+    animateCounter('m3', stats.institutions);                        // Materials benchmarked (~ inst count)
+
+    // Geographic impact summary
+    animateCounter('districtCount', 23);
+    animateCounter('stateCount', 14);
+
+    // Update header stats
+    const headerEl = document.querySelector('.header h1');
+    if (headerEl) {
+      const subtitle = headerEl.parentElement.querySelector('.live-status');
+      if (!subtitle) {
+        const liveTag = document.createElement('div');
+        liveTag.className = 'live-status';
+        liveTag.style.cssText = 'font-size:10px;color:#6ee7b7;margin-top:6px;font-weight:500;display:flex;align-items:center;gap:6px';
+        liveTag.innerHTML = `<span style="width:6px;height:6px;background:#6ee7b7;border-radius:50%;display:inline-block;animation:pulse 1.5s infinite"></span> Live data: ${stats.total_projects} projects · $${(stats.total_funding_usd/1e6).toFixed(1)}M tracked · ${pcs.length} PCs · ${focus.length} focus areas`;
+        headerEl.parentElement.appendChild(liveTag);
+      }
+    }
+  } catch (e) {
+    console.warn('Live data fetch failed, using demo defaults:', e);
+    // Fallback to original hardcoded values if API is unreachable
+    animateCounter('s1', 147);
+    animateCounter('s2', 3842);
+    animateCounter('s5', 23);
+    animateCounter('s6', 7);
+    animateCounter('s7', 5);
+    animateCounter('m1', 147);
+    animateCounter('m2', 3842);
+    animateCounter('m3', 286);
+    animateCounter('districtCount', 23);
+    animateCounter('stateCount', 14);
+  }
+}
+
+loadLivePortalStats();
+
+// DoD role counters (mission-specific, not portal-derived)
+animateCounter('d1', 412);
+animateCounter('d2', 5);
+animateCounter('d3', 8);
+animateCounter('d4', 247);
+
+// Member query response time
+setTimeout(() => { const el = document.getElementById('m4'); if (el) el.textContent = '1.2s'; }, 900);
+
+// ═══ ROLE SWITCHER ═══
+const personas = {
+  admin: {
+    name: 'Scott Miller',
+    role: 'Executive Director · NextFlex',
+    avatar: 'SM',
+    tag: '★ NextFlex Admin',
+    tagClass: 'admin'
+  },
+  dod: {
+    name: 'Dr. R. Adams',
+    role: 'Materials Director · ARL',
+    avatar: 'RA',
+    tag: '⬢ DoD User',
+    tagClass: 'dod'
+  },
+  member: {
+    name: 'Dr. V. Vokkarane',
+    role: 'PI · UMass Lowell ECE',
+    avatar: 'VV',
+    tag: '⚙ Member · Tier 1',
+    tagClass: 'member'
+  }
+};
+
+function setRole(role, btn) {
+  document.body.dataset.role = role;
+  document.querySelectorAll('.role-switcher .rs-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+
+  const p = personas[role];
+  document.getElementById('uname').textContent = p.name;
+  document.getElementById('urole').textContent = p.role;
+  document.getElementById('userAvatar').textContent = p.avatar;
+
+  const tag = document.getElementById('roleTag');
+  tag.textContent = p.tag;
+  tag.className = 'role-tag ' + p.tagClass;
+
+  // Re-trigger TRL/MRL bar animation if the role shows them
+  setTimeout(() => {
+    const trl = document.getElementById('trlBar');
+    const mrl = document.getElementById('mrlBar');
+    if (trl && trl.offsetParent !== null) {
+      trl.style.width = '0';
+      mrl.style.width = '0';
+      requestAnimationFrame(() => {
+        trl.style.width = '66.7%';
+        mrl.style.width = '66.7%';
+      });
+    }
+  }, 50);
+
+  // Scroll to top on role switch for clean experience
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+setTimeout(() => { document.getElementById('s4') && (document.getElementById('s4').textContent = '1.2s'); }, 900);
+
+// ═══ TRL/MRL BARS ═══
+setTimeout(() => {
+  document.getElementById('trlBar').style.width = '66.7%';
+  document.getElementById('mrlBar').style.width = '66.7%';
+}, 300);
+
+// ═══ NAV ═══
+document.querySelectorAll('.nav button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+
+// ═══ ENTITY FILTER ═══
+let activeFilter = 'all';
+function filterEntities() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  document.querySelectorAll('.entity').forEach(e => {
+    const matchText = e.textContent.toLowerCase().includes(q);
+    const matchType = activeFilter === 'all' || e.dataset.type === activeFilter;
+    e.style.display = (matchText && matchType) ? 'flex' : 'none';
+  });
+}
+function filterType(btn, type) {
+  activeFilter = type;
+  document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  filterEntities();
+}
+
+// ═══ QUERY ═══
+function setQuery(btn) { document.getElementById('queryInput').value = btn.textContent; }
+function runQuery() {
+  const input = document.getElementById('queryInput');
+  const q = input.value.trim();
+  if (!q) return;
+
+  const btn = input.nextElementSibling;
+  const origLabel = btn.textContent;
+  btn.textContent = 'Searching...';
+  btn.disabled = true;
+
+  fetch(`/api/projects?q=${encodeURIComponent(q)}&limit=10`)
+    .then(r => r.json())
+    .then(data => {
+      btn.textContent = origLabel;
+      btn.disabled = false;
+
+      if (!data.results || data.results.length === 0) {
+        showQueryResults(q, [], 'No projects matched your query.');
+        return;
+      }
+
+      showQueryResults(q, data.results);
+      input.value = '';
+    })
+    .catch(e => {
+      btn.textContent = origLabel;
+      btn.disabled = false;
+      alert('Query failed: ' + e.message);
+    });
+}
+
+function showQueryResults(query, results, emptyMsg) {
+  // Remove any prior result panel
+  const prior = document.getElementById('queryResultsPanel');
+  if (prior) prior.remove();
+
+  const panel = document.createElement('div');
+  panel.id = 'queryResultsPanel';
+  panel.className = 'panel';
+  panel.style.cssText = 'margin-top:12px;border:2px solid var(--teal);';
+
+  const header = `
+    <h2 style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+      <span class="dot" style="background:var(--teal)"></span>
+      GraphRAG response — <span style="font-weight:500;color:var(--muted);font-size:12px">"${escapeHtml(query)}"</span>
+      <button onclick="document.getElementById('queryResultsPanel').remove()" style="margin-left:auto;background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:18px;line-height:1">×</button>
+    </h2>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;gap:8px">
+      <span style="display:inline-block;width:6px;height:6px;background:var(--green);border-radius:50%;animation:pulse 1.5s infinite"></span>
+      Pipeline: query → portal full-text search → ${results.length} sourced results · audit logged
+    </div>
+  `;
+
+  let body = '';
+  if (results.length === 0) {
+    body = `<div style="padding:24px;text-align:center;color:var(--muted);font-style:italic">${escapeHtml(emptyMsg || 'No matches found')}</div>`;
+  } else {
+    body = '<div style="display:flex;flex-direction:column;gap:8px">' +
+      results.map((r, i) => `
+        <div style="padding:12px 14px;background:var(--bg);border:1px solid var(--border);border-radius:8px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:10px;background:var(--light-teal);color:var(--teal);padding:2px 8px;border-radius:6px;font-weight:700">[${i + 1}] ${escapeHtml(r.project_call)}</span>
+            <span style="font-size:10px;color:var(--muted)">${escapeHtml(r.id)}</span>
+          </div>
+          <div style="font-size:13px;font-weight:600;margin-bottom:3px">${escapeHtml(r.title)}</div>
+          <div style="font-size:11px;color:var(--muted)">📍 ${escapeHtml(r.lead_institution || '—')} · ${escapeHtml(r.focus_area || '—')} · ${escapeHtml(r.congressional_district || '—')}</div>
+        </div>
+      `).join('') + '</div>';
+  }
+
+  panel.innerHTML = header + body;
+
+  // Insert right after the query section
+  const querySection = document.querySelector('.query-section');
+  querySection.parentNode.insertBefore(panel, querySection.nextSibling);
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function escapeHtml(s) {
+  return String(s ?? '')
+    .replaceAll('&', '&amp;').replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;').replaceAll('"', '&quot;');
+}
+
+// ═══ CHARTS ═══
+const isDark = matchMedia('(prefers-color-scheme:dark)').matches;
+const gridC = isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.04)';
+const txtC = isDark ? '#7d8694' : '#64748b';
+const cFont = { family: "'Instrument Sans', system-ui" };
+
+new Chart(document.getElementById('matChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Ag nano\n(GenesINk)', 'Cu\n(CI-005)', 'Ag flake\n(DuPont)', 'Carbon\n(Henkel)', 'BST\ndielectric'],
+    datasets: [
+      { label: 'Conductivity', data: [12.4, 8.7, 6.2, 0.8, 0.01], backgroundColor: '#132B4A', borderRadius: 5, barPercentage: 0.5 },
+      { label: 'Adhesion', data: [4.8, 3.9, 4.2, 3.1, 4.5], backgroundColor: '#0A8F8F', borderRadius: 5, barPercentage: 0.5 }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    scales: {
+      x: { grid: { display: false }, ticks: { font: { ...cFont, size: 11 }, color: txtC, maxRotation: 0 } },
+      y: { grid: { color: gridC }, ticks: { font: { ...cFont, size: 11 }, color: txtC } }
+    },
+    plugins: { legend: { display: false }, tooltip: { backgroundColor: isDark ? '#232830' : '#0f172a', titleFont: cFont, bodyFont: cFont, cornerRadius: 8, padding: 10 } }
+  }
+});
+
+new Chart(document.getElementById('relChart'), {
+  type: 'bar',
+  data: {
+    labels: ['PC 1-3', 'PC 4-5', 'PC 6-7', 'PC 8', 'PC 9', 'PC 10'],
+    datasets: [
+      { label: 'Thermal cycling', data: [3, 8, 14, 22, 31, 28], backgroundColor: '#d97706', borderRadius: 4, barPercentage: 0.65 },
+      { label: '85/85 humidity', data: [1, 5, 11, 18, 24, 21], backgroundColor: '#0A8F8F', borderRadius: 4, barPercentage: 0.65 },
+      { label: 'Mechanical flex', data: [0, 2, 6, 12, 15, 19], backgroundColor: '#6366f1', borderRadius: 4, barPercentage: 0.65 }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    scales: {
+      x: { stacked: true, grid: { display: false }, ticks: { font: { ...cFont, size: 11 }, color: txtC } },
+      y: { stacked: true, grid: { color: gridC }, ticks: { font: { ...cFont, size: 11 }, color: txtC } }
+    },
+    plugins: { legend: { display: false }, tooltip: { mode: 'index', backgroundColor: isDark ? '#232830' : '#0f172a', titleFont: cFont, bodyFont: cFont, cornerRadius: 8, padding: 10 } }
+  }
+});
+</script>
+</body>
+</html>
