@@ -1,0 +1,20 @@
+# Render Blueprint for NextFlex Project Portal
+# https://render.com/docs/blueprint-spec
+#
+# Deploys the portal as a free web service.
+# Render will:
+#   1. Install dependencies from requirements.txt
+#   2. Start the server with uvicorn on $PORT
+#   3. Provide a free HTTPS URL like nextflex-portal.onrender.com
+#   4. Spin down after 15 min idle, cold-start on next request
+
+services:
+  - type: web
+    name: nextflex-portal
+    runtime: python
+    plan: free
+    pythonVersion: "3.11"
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
+    autoDeploy: true
+    healthCheckPath: /api/health

@@ -8,6 +8,8 @@ Run: uvicorn app:app --reload --port 8000
 
 import json
 import sqlite3
+import subprocess
+import sys
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Optional
@@ -19,6 +21,29 @@ from fastapi.staticfiles import StaticFiles
 
 DB_PATH = Path(__file__).parent / "nextflex.db"
 STATIC_DIR = Path(__file__).parent / "static"
+
+
+# Auto-create the database on first boot.
+# This matters on hosts with ephemeral filesystems (e.g. Render free tier),
+# where the DB file is wiped on every redeploy and cold start.
+def ensure_db():
+    if DB_PATH.exists():
+        return
+    print(f"[startup] {DB_PATH} not found — initializing from init_db.py", flush=True)
+    init_script = Path(__file__).parent / "init_db.py"
+    result = subprocess.run(
+        [sys.executable, str(init_script)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        print(f"[startup] DB init failed:\n{result.stderr}", flush=True)
+        raise RuntimeError("Database initialization failed")
+    print(f"[startup] DB ready: {result.stdout}", flush=True)
+
+
+ensure_db()
 
 app = FastAPI(
     title="NextFlex Project Portal",
