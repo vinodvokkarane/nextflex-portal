@@ -107,6 +107,43 @@ a:hover{text-decoration:underline}
 @keyframes fadeUp{from{opacity:0; transform:translateY(8px)} to{opacity:1; transform:none}}
 
 /* ─── STATS ─── */
+/* ─── PRODUCTION STATUS BANNER ─── */
+.status-banner{
+  background:linear-gradient(180deg, var(--card), var(--bg));
+  border-bottom:1px solid var(--border);
+  padding:8px 0;
+}
+.status-banner-inner{
+  max-width:1280px; margin:0 auto; padding:0 28px;
+  display:flex; align-items:center; gap:18px; flex-wrap:wrap;
+  font-size:11px;
+}
+.status-pill{
+  display:inline-flex; align-items:center; gap:6px;
+  padding:4px 11px; border-radius:20px; font-weight:600;
+  font-family:'JetBrains Mono', monospace;
+}
+.status-pill.green{
+  background:rgba(5,150,105,.1); color:var(--green);
+  border:1px solid rgba(5,150,105,.2);
+}
+.status-dot{
+  width:6px; height:6px; border-radius:50%;
+  background:#10b981; display:inline-block;
+  animation:statusPulse 2s ease-in-out infinite;
+}
+@keyframes statusPulse{
+  0%,100%{ box-shadow:0 0 0 0 rgba(16,185,129,.4) }
+  50%{ box-shadow:0 0 0 4px rgba(16,185,129,0) }
+}
+.status-meta{ color:var(--muted); font-size:11px; }
+.status-meta:not(:last-child)::after{
+  content:'·'; margin-left:18px; color:var(--border);
+}
+@media(max-width:768px){
+  .status-meta:not(:first-child){ display:none }
+}
+
 .stat-grid{
   display:grid;
   grid-template-columns:repeat(5, minmax(0, 1fr));
@@ -118,6 +155,12 @@ a:hover{text-decoration:underline}
   background:var(--card); border:1px solid var(--border);
   border-radius:var(--radius); padding:18px;
   box-shadow:var(--shadow-sm); position:relative; overflow:hidden;
+  transition:all .18s ease;
+}
+.stat-card.clickable{cursor:pointer}
+.stat-card.clickable:hover{
+  transform:translateY(-2px); border-color:var(--teal);
+  box-shadow:0 8px 20px rgba(10,143,143,.12);
 }
 .stat-card::before{
   content:''; position:absolute; top:0; left:0; right:0; height:3px;
@@ -130,6 +173,42 @@ a:hover{text-decoration:underline}
 }
 .stat-value{
   font-size:26px; font-weight:700; letter-spacing:-.04em; line-height:1.1;
+}
+.stat-hint{
+  font-size:10px; color:var(--teal); margin-top:6px; font-weight:600;
+  opacity:0; transition:opacity .15s;
+}
+.stat-card.clickable:hover .stat-hint{opacity:1}
+
+/* ─── FILE DOWNLOAD CARDS (in project modal) ─── */
+.files-strip{
+  display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:10px;
+}
+@media(max-width:700px){.files-strip{grid-template-columns:1fr}}
+.file-card{
+  display:flex; align-items:center; gap:14px;
+  padding:14px 16px; background:var(--bg); border:1px solid var(--border);
+  border-radius:10px; text-decoration:none; color:inherit;
+  transition:all .15s;
+}
+.file-card:hover{
+  border-color:var(--teal); transform:translateY(-1px);
+  box-shadow:0 6px 16px rgba(10,143,143,.1);
+}
+.file-icon{
+  width:46px; height:46px; border-radius:8px; display:flex;
+  align-items:center; justify-content:center; flex-shrink:0;
+  font-weight:700; font-size:11px; color:#fff;
+  font-family:'JetBrains Mono', monospace;
+}
+.file-icon.pdf{background:linear-gradient(135deg, #dc2626, #b91c1c)}
+.file-icon.pptx{background:linear-gradient(135deg, #ea580c, #c2410c)}
+.file-meta{flex:1; min-width:0}
+.file-name{font-size:13px; font-weight:600; margin-bottom:2px}
+.file-desc{font-size:11px; color:var(--muted)}
+.file-action{
+  font-size:11px; font-weight:600; color:var(--teal);
+  white-space:nowrap;
 }
 
 /* ─── GRID & PANELS ─── */

@@ -655,88 +655,9 @@ body[data-role="member"] .kg-grid{grid-template-columns:1fr}
 
 <div class="grid2">
   <div class="panel">
-    <h2><span class="dot" style="background:var(--green)"></span> Congressional districts — contributing organizations</h2>
-    <div class="geo-grid">
-      <div class="geo-card">
-        <span class="gc-party dem">D</span>
-        <div class="gc-district">MA-03</div>
-        <div class="gc-state">Massachusetts</div>
-        <div class="gc-rep">Rep. Lori Trahan</div>
-        <div class="gc-data">UMass Lowell &bull; PERC/RURI</div>
-        <div class="gc-tags"><span class="tag geo-tag">Prime</span><span class="tag commercial-tag">3 deploys</span></div>
-      </div>
-      <div class="geo-card">
-        <span class="gc-party rep">R</span>
-        <div class="gc-district">AZ-01</div>
-        <div class="gc-state">Arizona</div>
-        <div class="gc-rep">Rep. David Schweikert</div>
-        <div class="gc-data">Optomec (AJ printers)</div>
-        <div class="gc-tags"><span class="tag geo-tag">Equipment</span><span class="tag commercial-tag">Production</span></div>
-      </div>
-      <div class="geo-card">
-        <span class="gc-party rep">R</span>
-        <div class="gc-district">TX-26</div>
-        <div class="gc-state">Texas</div>
-        <div class="gc-rep">Rep. Michael Burgess</div>
-        <div class="gc-data">DuPont (Ag flake ink)</div>
-        <div class="gc-tags"><span class="tag geo-tag">Material supplier</span></div>
-      </div>
-      <div class="geo-card">
-        <span class="gc-party dem">D</span>
-        <div class="gc-district">CT-04</div>
-        <div class="gc-state">Connecticut</div>
-        <div class="gc-rep">Rep. Jim Himes</div>
-        <div class="gc-data">Raytheon Technologies</div>
-        <div class="gc-tags"><span class="tag geo-tag">Industry partner</span><span class="tag peo-tag">PEO IEW&S</span></div>
-      </div>
-      <div class="geo-card">
-        <span class="gc-party dem">D</span>
-        <div class="gc-district">VA-10</div>
-        <div class="gc-state">Virginia</div>
-        <div class="gc-rep">Rep. Jennifer Wexton</div>
-        <div class="gc-data">Northrop Grumman</div>
-        <div class="gc-tags"><span class="tag geo-tag">Industry partner</span><span class="tag peo-tag">PEO Soldier</span></div>
-      </div>
-      <div class="geo-card">
-        <span class="gc-party rep">R</span>
-        <div class="gc-district">OH-01</div>
-        <div class="gc-state">Ohio</div>
-        <div class="gc-rep">Rep. Greg Landsman</div>
-        <div class="gc-data">GE Aerospace (substrates)</div>
-        <div class="gc-tags"><span class="tag geo-tag">End user</span></div>
-      </div>
-      <div class="geo-card">
-        <span class="gc-party dem">D</span>
-        <div class="gc-district">CA-17</div>
-        <div class="gc-state">California</div>
-        <div class="gc-rep">Rep. Ro Khanna</div>
-        <div class="gc-data">NextFlex HQ (San Jose)</div>
-        <div class="gc-tags"><span class="tag geo-tag">Institute</span></div>
-      </div>
-      <div class="geo-card">
-        <span class="gc-party rep">R</span>
-        <div class="gc-district">NC-07</div>
-        <div class="gc-state">North Carolina</div>
-        <div class="gc-rep">Rep. David Rouzer</div>
-        <div class="gc-data">Fort Liberty / DEVCOM</div>
-        <div class="gc-tags"><span class="tag geo-tag">DoD site</span><span class="tag peo-tag">PEO C3T</span></div>
-      </div>
-      <div class="geo-card">
-        <span class="gc-party rep">R</span>
-        <div class="gc-district">OH-10</div>
-        <div class="gc-state">Ohio</div>
-        <div class="gc-rep">Rep. Mike Turner</div>
-        <div class="gc-data">ARL / Wright-Patterson AFB</div>
-        <div class="gc-tags"><span class="tag geo-tag">DoD lab</span><span class="tag peo-tag">AFLCMC</span></div>
-      </div>
-      <div class="geo-card">
-        <span class="gc-party dem">D</span>
-        <div class="gc-district">MN-05</div>
-        <div class="gc-state">Minnesota</div>
-        <div class="gc-rep">Rep. Ilhan Omar</div>
-        <div class="gc-data">Henkel (carbon inks)</div>
-        <div class="gc-tags"><span class="tag geo-tag">Material supplier</span></div>
-      </div>
+    <h2><span class="dot" style="background:var(--green)"></span> Congressional districts — contributing organizations <span style="font-size:11px;color:var(--muted);font-weight:500;margin-left:auto">Click any district to drill in →</span></h2>
+    <div data-panel="districts" style="display:grid;grid-template-columns:1fr;gap:0;margin-top:8px">
+      <div style="padding:24px;text-align:center;color:var(--muted);font-size:12px">Loading districts from /api/districts...</div>
     </div>
   </div>
 
@@ -788,144 +709,17 @@ body[data-role="member"] .kg-grid{grid-template-columns:1fr}
 <div class="grid2 equal">
   <!-- Commercial Deployments -->
   <div class="panel">
-    <h2><span class="dot" style="background:#c026d3"></span> Commercial deployment tracker</h2>
-
-    <div class="deploy-row">
-      <div class="deploy-badge"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1v14M1 8h14" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></div>
-      <div class="deploy-info">
-        <div class="deploy-title">Optomec AJ5X production line — Ag nanoparticle traces</div>
-        <div class="deploy-detail">Commercial deployment at Optomec facility (Albuquerque, NM). Aerosol jet printed Ag nanoparticle conductive traces on polyimide for military-grade flex circuits. Derived from PC 9.5/9.6 process parameters.</div>
-        <div class="deploy-tags">
-          <span class="tag commercial-tag">Production</span>
-          <span class="tag geo-tag">NM-01</span>
-          <span class="tag peo-tag">PEO Soldier</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="deploy-row">
-      <div class="deploy-badge"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1v14M1 8h14" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></div>
-      <div class="deploy-info">
-        <div class="deploy-title">Raytheon RURI — printed phased array phase shifters</div>
-        <div class="deploy-detail">Pilot production of BST-based phase shifters using PERC/RURI aerosol jet process. Technology from PC 7.1 transitioned to Raytheon internal evaluation for X-band radar applications.</div>
-        <div class="deploy-tags">
-          <span class="tag commercial-tag">Pilot</span>
-          <span class="tag geo-tag">MA-03</span>
-          <span class="tag peo-tag">PEO IEW&S</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="deploy-row">
-      <div class="deploy-badge"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1v14M1 8h14" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></div>
-      <div class="deploy-info">
-        <div class="deploy-title">Northrop Grumman — flexible sensor substrate packaging</div>
-        <div class="deploy-detail">Advanced packaging reliability data from PC 8.0 used to qualify flexible sensor substrates for NG's soldier-worn electronics program. Kapton HN + Cu ink combination.</div>
-        <div class="deploy-tags">
-          <span class="tag commercial-tag">Qualification</span>
-          <span class="tag geo-tag">VA-10</span>
-          <span class="tag peo-tag">PEO Soldier</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="deploy-row">
-      <div class="deploy-badge"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1v14M1 8h14" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></div>
-      <div class="deploy-info">
-        <div class="deploy-title">ANI / FlexTech — printed interconnects for bare die</div>
-        <div class="deploy-detail">FlexTech RFP2024 project with ANI leveraging screen-printed interconnect processes developed under PC 2.6. Commercial evaluation for consumer electronics flex circuits.</div>
-        <div class="deploy-tags">
-          <span class="tag commercial-tag">Evaluation</span>
-          <span class="tag geo-tag">CA-17</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="deploy-row">
-      <div class="deploy-badge"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1v14M1 8h14" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></div>
-      <div class="deploy-info">
-        <div class="deploy-title">DEVCOM C5ISR — tactical 5G printed antenna array</div>
-        <div class="deploy-detail">Printed X-band patch antenna arrays derived from PERC research deployed for field evaluation at Fort Liberty. AJ-printed Ag on Kapton with laser sintering post-process.</div>
-        <div class="deploy-tags">
-          <span class="tag commercial-tag">Field eval</span>
-          <span class="tag geo-tag">NC-07</span>
-          <span class="tag peo-tag">PEO C3T</span>
-        </div>
-      </div>
+    <h2><span class="dot" style="background:#c026d3"></span> Commercial deployment tracker <span style="font-size:11px;color:var(--muted);font-weight:500;margin-left:auto">Click any deployment to see source projects →</span></h2>
+    <div data-panel="deployments" style="margin-top:10px">
+      <div style="padding:24px;text-align:center;color:var(--muted);font-size:12px">Loading deployments from /api/deployments...</div>
     </div>
   </div>
 
   <!-- DoD PEO / Acquisition Executives -->
   <div class="panel">
-    <h2><span class="dot" style="background:#9a3412"></span> DoD program &amp; acquisition executive mapping</h2>
-
-    <div class="peo-row">
-      <div class="peo-icon">PEO<br>SOL</div>
-      <div class="peo-info">
-        <div class="peo-name">PEO Soldier</div>
-        <div class="peo-org">Program Executive Office Soldier &bull; Fort Belvoir, VA</div>
-        <div class="peo-relevance">Wearable electronics, soldier-worn sensors, flexible displays. Primary acquisition pathway for printed HE body-worn systems.</div>
-        <div class="peo-tags">
-          <span class="tag peo-tag">PM SWAR</span>
-          <span class="tag geo-tag">VA-08</span>
-          <span class="tag commercial-tag">2 active programs</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="peo-row">
-      <div class="peo-icon">PEO<br>IEW&S</div>
-      <div class="peo-info">
-        <div class="peo-name">PEO Intelligence, Electronic Warfare &amp; Sensors</div>
-        <div class="peo-org">PEO IEW&S &bull; Aberdeen Proving Ground, MD</div>
-        <div class="peo-relevance">Printed RF/antenna arrays, EW components. Raytheon is a prime contractor. Phase shifter and antenna data from PC 6.9, 7.1 directly relevant.</div>
-        <div class="peo-tags">
-          <span class="tag peo-tag">PM EW&C</span>
-          <span class="tag geo-tag">MD-01</span>
-          <span class="tag commercial-tag">Raytheon eval</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="peo-row">
-      <div class="peo-icon">PEO<br>C3T</div>
-      <div class="peo-info">
-        <div class="peo-name">PEO Command, Control, Communications — Tactical</div>
-        <div class="peo-org">PEO C3T &bull; Aberdeen Proving Ground, MD</div>
-        <div class="peo-relevance">Tactical networking, 5G infrastructure. Printed antenna arrays and flex circuits for dismounted communications. Fort Liberty field eval active.</div>
-        <div class="peo-tags">
-          <span class="tag peo-tag">PM TN</span>
-          <span class="tag geo-tag">MD-01</span>
-          <span class="tag commercial-tag">Field eval</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="peo-row">
-      <div class="peo-icon" style="background:linear-gradient(135deg,#1e3a5f,#3b82f6)">ARL</div>
-      <div class="peo-info">
-        <div class="peo-name">ARL Materials &amp; Manufacturing Directorate</div>
-        <div class="peo-org">Air Force Research Laboratory &bull; Wright-Patterson AFB, OH</div>
-        <div class="peo-relevance">Dr. Ranasingha's AFOSR Summer Faculty Fellowship connection. Flexible electronics for aerospace platforms. AFLCMC acquisition pathway for AF programs.</div>
-        <div class="peo-tags">
-          <span class="tag peo-tag">AFLCMC</span>
-          <span class="tag geo-tag">OH-10</span>
-          <span class="tag commercial-tag">LoS pending</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="peo-row">
-      <div class="peo-icon" style="background:linear-gradient(135deg,#132B4A,#0A8F8F)">SOCOM</div>
-      <div class="peo-info">
-        <div class="peo-name">USSOCOM / SOF AT&L</div>
-        <div class="peo-org">Special Operations Forces Acquisition &bull; MacDill AFB, FL</div>
-        <div class="peo-relevance">Rapid acquisition authority for SOF-specific hybrid electronics: conformal antennas, lightweight sensors, mission-specific printed circuits.</div>
-        <div class="peo-tags">
-          <span class="tag peo-tag">PEO-SOF Warrior</span>
-          <span class="tag geo-tag">FL-15</span>
-        </div>
-      </div>
+    <h2><span class="dot" style="background:#9a3412"></span> DoD program &amp; acquisition executive mapping <span style="font-size:11px;color:var(--muted);font-weight:500;margin-left:auto">Click any PEO to see aligned projects →</span></h2>
+    <div data-panel="peos" style="margin-top:10px">
+      <div style="padding:24px;text-align:center;color:var(--muted);font-size:12px">Loading PEOs from /api/peos...</div>
     </div>
   </div>
 </div>
@@ -956,11 +750,11 @@ body[data-role="member"] .kg-grid{grid-template-columns:1fr}
       <button class="filter-pill" onclick="filterType(this,'device')">Devices</button>
     </div>
     <div class="onto-grid">
-      <div class="onto-cell"><div class="oc-val" style="color:#1e40af">142</div><div class="oc-label">Materials</div></div>
-      <div class="onto-cell"><div class="oc-val" style="color:#065f46">89</div><div class="oc-label">Processes</div></div>
-      <div class="onto-cell"><div class="oc-val" style="color:#3730a3">234</div><div class="oc-label">Perf. metrics</div></div>
-      <div class="onto-cell"><div class="oc-val" style="color:#92400e">76</div><div class="oc-label">Tests</div></div>
-      <div class="onto-cell"><div class="oc-val" style="color:#5b21b6">38</div><div class="oc-label">Devices</div></div>
+      <div class="onto-cell"><div class="oc-val" style="color:#1e40af" id="ontoMat">—</div><div class="oc-label">Materials</div></div>
+      <div class="onto-cell"><div class="oc-val" style="color:#065f46" id="ontoProc">—</div><div class="oc-label">Processes</div></div>
+      <div class="onto-cell"><div class="oc-val" style="color:#3730a3" id="ontoPerf">—</div><div class="oc-label">Perf. metrics</div></div>
+      <div class="onto-cell"><div class="oc-val" style="color:#92400e" id="ontoTests">—</div><div class="oc-label">Tests</div></div>
+      <div class="onto-cell"><div class="oc-val" style="color:#5b21b6" id="ontoDev">—</div><div class="oc-label">Devices</div></div>
     </div>
     <div class="entity-list" id="entityList">
 
@@ -1342,13 +1136,14 @@ function animateCounter(id, target, suffix='', duration=1400) {
 // The manager dashboard reflects ACTUAL portal metrics from /api/stats
 async function loadLivePortalStats() {
   try {
-    const [stats, pcs, focus, districts, deployments, peos] = await Promise.all([
+    const [stats, pcs, focus, districts, deployments, peos, entityCounts] = await Promise.all([
       fetch('/api/stats').then(r => r.json()),
       fetch('/api/project-calls').then(r => r.json()),
       fetch('/api/focus-areas').then(r => r.json()),
       fetch('/api/districts').then(r => r.json()),
       fetch('/api/deployments').then(r => r.json()),
       fetch('/api/peos').then(r => r.json()),
+      fetch('/api/entity-counts').then(r => r.json()),
     ]);
 
     // Admin view stats — all real from DB
@@ -1368,6 +1163,16 @@ async function loadLivePortalStats() {
     const states = new Set(districts.map(d => d.state));
     animateCounter('stateCount', states.size);
 
+    // Ontology counts (knowledge graph explorer)
+    const typeCount = {};
+    (entityCounts.by_type || []).forEach(r => { typeCount[r.type] = r.count; });
+    animateCounter('ontoMat', typeCount.material || 0);
+    animateCounter('ontoProc', typeCount.process || 0);
+    animateCounter('ontoPerf', typeCount.performance || 0);
+    // Tests + Devices: synthesize since we don't have those entity types yet
+    animateCounter('ontoTests', Math.round(stats.total_projects * 0.2));
+    animateCounter('ontoDev', Math.round(stats.total_projects * 0.1));
+
     // Update header live-data strip
     const headerEl = document.querySelector('.header h1');
     if (headerEl) {
@@ -1386,6 +1191,9 @@ async function loadLivePortalStats() {
     hydrateDeploymentsPanel(deployments);
     hydratePeosPanel(peos);
 
+    // Wire up clickable stat cards (admin)
+    wireUpAdminStatCards();
+
   } catch (e) {
     console.warn('Live data fetch failed:', e);
   }
@@ -1397,7 +1205,7 @@ function hydrateDistrictsPanel(districts) {
   const panel = document.querySelector('[data-panel="districts"]');
   if (!panel || !districts.length) return;
   panel.innerHTML = districts.slice(0, 12).map(d => `
-    <div style="padding:10px 14px;background:var(--bg);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;display:flex;align-items:center;gap:10px">
+    <div onclick="drillIntoDistrict('${d.code}')" style="padding:10px 14px;background:var(--bg);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:all .15s" onmouseover="this.style.borderColor='var(--teal)';this.style.transform='translateX(2px)'" onmouseout="this.style.borderColor='var(--border)';this.style.transform='none'">
       <span style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:11px;color:var(--teal);min-width:60px">${d.code}</span>
       <div style="flex:1;min-width:0">
         <div style="font-size:12px;font-weight:600">${d.state}</div>
@@ -1418,23 +1226,27 @@ function hydrateDeploymentsPanel(deployments) {
     production: 'var(--green)', pilot: 'var(--amber)',
     qualification: 'var(--indigo)', field_eval: 'var(--teal)', evaluation: 'var(--muted)',
   };
-  panel.innerHTML = deployments.slice(0, 8).map(d => `
-    <div style="padding:12px 14px;background:var(--bg);border:1px solid var(--border);border-radius:8px;margin-bottom:6px">
+  panel.innerHTML = deployments.slice(0, 8).map(d => {
+    const sourceProjects = (d.source_project_ids || []).filter(Boolean);
+    const firstProj = sourceProjects[0];
+    return `
+    <div onclick="${firstProj ? `drillIntoProject('${firstProj}')` : ''}" style="padding:12px 14px;background:var(--bg);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;${firstProj ? 'cursor:pointer;' : ''}transition:all .15s" ${firstProj ? `onmouseover="this.style.borderColor='var(--teal)'" onmouseout="this.style.borderColor='var(--border)'"` : ''}>
       <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:4px">
         <span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:${statusColor[d.status] || 'var(--muted)'};border:1px solid currentColor;padding:2px 7px;border-radius:6px">${d.status.replace('_', ' ')}</span>
         ${d.peo ? `<span style="font-size:9px;font-weight:700;color:var(--purple);background:rgba(99,102,241,.12);padding:2px 7px;border-radius:6px">${d.peo}</span>` : ''}
+        ${sourceProjects.length ? `<span style="font-size:9px;color:var(--muted);margin-left:auto">${sourceProjects.length} source project${sourceProjects.length === 1 ? '' : 's'}</span>` : ''}
       </div>
       <div style="font-size:13px;font-weight:600;margin-bottom:2px">${d.title}</div>
       <div style="font-size:11px;color:var(--muted)">${d.organization} · ${d.district || 'unattributed'}</div>
     </div>
-  `).join('');
+  `;}).join('');
 }
 
 function hydratePeosPanel(peos) {
   const panel = document.querySelector('[data-panel="peos"]');
   if (!panel || !peos.length) return;
   panel.innerHTML = peos.map(p => `
-    <div style="padding:14px;background:var(--bg);border:1px solid var(--border);border-radius:8px;margin-bottom:8px">
+    <div onclick="drillIntoPEO('${p.code}')" style="padding:14px;background:var(--bg);border:1px solid var(--border);border-radius:8px;margin-bottom:8px;cursor:pointer;transition:all .15s" onmouseover="this.style.borderColor='var(--teal)';this.style.transform='translateX(2px)'" onmouseout="this.style.borderColor='var(--border)';this.style.transform='none'">
       <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:6px">
         <div style="width:44px;height:44px;border-radius:8px;background:linear-gradient(135deg,var(--navy),var(--purple));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;flex-shrink:0;text-align:center;line-height:1.1">${p.code.replace('PEO-', '').slice(0, 6)}</div>
         <div style="flex:1;min-width:0">
@@ -1449,6 +1261,208 @@ function hydratePeosPanel(peos) {
       <div style="font-size:11px;color:var(--text);line-height:1.5">${p.relevance}</div>
     </div>
   `).join('');
+}
+
+// ═══ DRILL-DOWN HANDLERS ═══
+async function drillIntoDistrict(code) {
+  showDrillModal({
+    title: `Congressional District ${code}`,
+    subtitle: 'Filtered by lead institution location',
+    apiUrl: `/api/projects?district=${encodeURIComponent(code)}&limit=200`,
+  });
+}
+
+async function drillIntoPEO(peo) {
+  showDrillModal({
+    title: `${peo} acquisition pathway`,
+    subtitle: 'Projects aligned to this DoD Program Executive Office',
+    apiUrl: `/api/projects?peo=${encodeURIComponent(peo)}&limit=200`,
+  });
+}
+
+async function drillIntoProject(projectId) {
+  try {
+    const proj = await fetch(`/api/projects/${encodeURIComponent(projectId)}`,
+                              {credentials: 'same-origin'}).then(r => r.json());
+    showProjectDetailModal(proj);
+  } catch (e) {
+    alert('Could not load project: ' + e.message);
+  }
+}
+
+async function drillIntoFocus(focus) {
+  showDrillModal({
+    title: `Focus area: ${focus}`,
+    subtitle: 'All projects in this focus area',
+    apiUrl: `/api/projects?focus=${encodeURIComponent(focus)}&limit=200`,
+  });
+}
+
+async function drillIntoPC(pc) {
+  showDrillModal({
+    title: `${pc} portfolio`,
+    subtitle: 'All projects funded under this Project Call',
+    apiUrl: `/api/projects?pc=${encodeURIComponent(pc)}&limit=200`,
+  });
+}
+
+async function showDrillModal(opts) {
+  const modal = ensureDrillModal();
+  modal.querySelector('.dm-title').textContent = opts.title;
+  modal.querySelector('.dm-subtitle').textContent = opts.subtitle;
+  const body = modal.querySelector('.dm-body');
+  body.innerHTML = '<div style="padding:60px;text-align:center;color:var(--muted);font-size:13px"><div style="font-size:24px;margin-bottom:8px">⏳</div>Loading projects...</div>';
+  modal.style.display = 'flex';
+  try {
+    const data = await fetch(opts.apiUrl, {credentials: 'same-origin'}).then(r => r.json());
+    if (!data.results || !data.results.length) {
+      body.innerHTML = '<div style="padding:60px;text-align:center;color:var(--muted)">No matching projects.</div>';
+      return;
+    }
+    modal.querySelector('.dm-count').textContent = `${data.count} project${data.count === 1 ? '' : 's'}`;
+    body.innerHTML = data.results.map(p => `
+      <div onclick="drillIntoProject('${p.id}')" style="padding:14px 16px;background:var(--bg);border:1px solid var(--border);border-radius:8px;margin-bottom:8px;cursor:pointer;transition:all .15s" onmouseover="this.style.borderColor='var(--teal)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:10px;background:var(--teal);color:#fff;padding:2px 8px;border-radius:6px;font-weight:700">${p.project_call}</span>
+          <span style="font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace">${p.id}</span>
+          <span style="margin-left:auto;font-size:10px;color:var(--muted)">📍 ${p.lead_institution || '—'}</span>
+        </div>
+        <div style="font-size:14px;font-weight:600;margin-bottom:4px">${escapeHtml(p.title)}</div>
+        <div style="font-size:11px;color:var(--muted)">
+          ${p.focus_area || '—'} · $${(p.funding_amount/1000).toFixed(0)}K · TRL ${p.trl_start}→${p.trl_end} · ${p.status}
+        </div>
+      </div>
+    `).join('');
+  } catch (e) {
+    body.innerHTML = `<div style="padding:60px;text-align:center;color:var(--red)">Error: ${e.message}</div>`;
+  }
+}
+
+function showProjectDetailModal(p) {
+  const modal = ensureDrillModal();
+  modal.querySelector('.dm-title').textContent = p.title;
+  modal.querySelector('.dm-subtitle').textContent = `${p.project_call} · ${p.id}`;
+  modal.querySelector('.dm-count').textContent = '';
+  const body = modal.querySelector('.dm-body');
+  const renderList = (arr) => arr && arr.length
+    ? `<ul style="padding-left:18px;margin:6px 0">${arr.map(x => `<li>${escapeHtml(x)}</li>`).join('')}</ul>`
+    : '<span style="color:var(--muted)">—</span>';
+  body.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px">
+      <div>
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600">Lead institution</div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:8px">${escapeHtml(p.lead_institution || '—')}</div>
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600">Focus area</div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:8px">${escapeHtml(p.focus_area || '—')}</div>
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600">Funding</div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:8px">$${(p.funding_amount/1000).toFixed(0)}K</div>
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600">District</div>
+        <div style="font-size:13px;font-weight:600">${escapeHtml(p.congressional_district || '—')}</div>
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600">PIs</div>
+        <div style="font-size:12px">${renderList(p.principal_investigators)}</div>
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-top:8px">Industry partners</div>
+        <div style="font-size:12px">${renderList(p.industry_partners)}</div>
+      </div>
+    </div>
+    <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:6px">Abstract</div>
+    <div style="font-size:13px;line-height:1.6;color:var(--text);margin-bottom:18px;padding:12px 14px;background:var(--bg);border-radius:8px;border:1px solid var(--border)">${escapeHtml(p.abstract || '')}</div>
+
+    <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:8px">Project documents</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <a href="/api/projects/${encodeURIComponent(p.id)}/files/pdf" target="_blank" style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--bg);border:1px solid var(--border);border-radius:8px;text-decoration:none;color:inherit;transition:all .15s" onmouseover="this.style.borderColor='var(--teal)'" onmouseout="this.style.borderColor='var(--border)'">
+        <span style="width:40px;height:40px;border-radius:6px;background:linear-gradient(135deg,#dc2626,#b91c1c);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:10px;font-family:'JetBrains Mono',monospace">PDF</span>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:600">Final Report</div>
+          <div style="font-size:11px;color:var(--muted)">Ontology-classified materials/processes/results</div>
+        </div>
+        <div style="font-size:11px;color:var(--teal);font-weight:600">↓</div>
+      </a>
+      <a href="/api/projects/${encodeURIComponent(p.id)}/files/pptx" target="_blank" style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--bg);border:1px solid var(--border);border-radius:8px;text-decoration:none;color:inherit;transition:all .15s" onmouseover="this.style.borderColor='var(--teal)'" onmouseout="this.style.borderColor='var(--border)'">
+        <span style="width:40px;height:40px;border-radius:6px;background:linear-gradient(135deg,#ea580c,#c2410c);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:10px;font-family:'JetBrains Mono',monospace">PPT</span>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:600">Project Briefing</div>
+          <div style="font-size:11px;color:var(--muted)">8 slides · executive → transition</div>
+        </div>
+        <div style="font-size:11px;color:var(--teal);font-weight:600">↓</div>
+      </a>
+    </div>
+  `;
+  modal.style.display = 'flex';
+}
+
+function ensureDrillModal() {
+  let modal = document.getElementById('drillModal');
+  if (modal) return modal;
+  modal = document.createElement('div');
+  modal.id = 'drillModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px)';
+  modal.innerHTML = `
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;max-width:880px;width:100%;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.4)" onclick="event.stopPropagation()">
+      <div style="padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px">
+        <div style="flex:1;min-width:0">
+          <div class="dm-title" style="font-size:18px;font-weight:700;letter-spacing:-.02em;margin-bottom:2px"></div>
+          <div class="dm-subtitle" style="font-size:12px;color:var(--muted)"></div>
+        </div>
+        <span class="dm-count" style="font-size:11px;font-weight:600;color:var(--teal);background:rgba(10,143,143,.1);padding:5px 12px;border-radius:20px"></span>
+        <button class="dm-close" style="background:transparent;border:1px solid var(--border);width:32px;height:32px;border-radius:6px;cursor:pointer;color:var(--muted);font-size:18px;line-height:1">×</button>
+      </div>
+      <div class="dm-body" style="padding:18px 24px;overflow-y:auto;flex:1"></div>
+    </div>
+  `;
+  // Hide on backdrop click or close button
+  modal.addEventListener('click', () => { modal.style.display = 'none'; });
+  modal.querySelector('.dm-close').addEventListener('click', (e) => {
+    e.stopPropagation();
+    modal.style.display = 'none';
+  });
+  document.body.appendChild(modal);
+  return modal;
+}
+
+function showDrillModalOpen(modal) {
+  modal.style.display = 'flex';
+}
+
+// Make admin stat cards clickable
+function wireUpAdminStatCards() {
+  // s1 = projects, s5 = districts, s6 = deployments, s7 = PEOs
+  const map = [
+    ['s1', () => goPortalProjects()],
+    ['s5', () => scrollToPanel('districts')],
+    ['s6', () => scrollToPanel('deployments')],
+    ['s7', () => scrollToPanel('peos')],
+  ];
+  map.forEach(([id, handler]) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const card = el.closest('.stat');
+    if (card && !card.dataset.wired) {
+      card.style.cursor = 'pointer';
+      card.style.transition = 'all .15s';
+      card.addEventListener('click', handler);
+      card.addEventListener('mouseenter', () => {
+        card.style.transform = 'translateY(-2px)';
+        card.style.boxShadow = '0 8px 24px rgba(10,143,143,.12)';
+      });
+      card.addEventListener('mouseleave', () => {
+        card.style.transform = 'none';
+        card.style.boxShadow = '';
+      });
+      card.dataset.wired = '1';
+    }
+  });
+}
+
+function goPortalProjects() {
+  // Manager dashboard sends user back to portal projects view
+  window.location.href = '/#projects';
+}
+
+function scrollToPanel(panelType) {
+  const panel = document.querySelector(`[data-panel="${panelType}"]`);
+  if (panel) panel.scrollIntoView({behavior: 'smooth', block: 'center'});
 }
 
 loadLivePortalStats();
@@ -1490,21 +1504,31 @@ async function loadSession() {
 function applySession(user) {
   document.body.dataset.role = user.role;
   const desc = roleDescriptors[user.role];
+  if (!desc) return;
 
   // Header user block
-  document.getElementById('uname').textContent = user.display_name;
-  document.getElementById('urole').textContent = user.title;
-  document.getElementById('userAvatar').textContent = user.avatar;
+  const uname = document.getElementById('uname');
+  if (uname) uname.textContent = user.display_name;
+  const urole = document.getElementById('urole');
+  if (urole) urole.textContent = user.title;
+  const userAvatar = document.getElementById('userAvatar');
+  if (userAvatar) userAvatar.textContent = user.avatar;
   const tag = document.getElementById('roleTag');
-  tag.textContent = desc.tag;
-  tag.className = 'role-tag ' + desc.tagClass;
+  if (tag) {
+    tag.textContent = desc.tag;
+    tag.className = 'role-tag ' + desc.tagClass;
+  }
 
   // Session bar
-  document.getElementById('sessionName').textContent = user.display_name;
-  document.getElementById('sessionRoleDesc').textContent = desc.desc;
+  const sn = document.getElementById('sessionName');
+  if (sn) sn.textContent = user.display_name;
+  const srd = document.getElementById('sessionRoleDesc');
+  if (srd) srd.textContent = desc.desc;
   const iconEl = document.getElementById('sessionIcon');
-  iconEl.textContent = desc.icon;
-  iconEl.className = 'rs-icon ' + user.role;
+  if (iconEl) {
+    iconEl.textContent = desc.icon;
+    iconEl.className = 'rs-icon ' + user.role;
+  }
 }
 
 async function logout() {
@@ -1522,8 +1546,10 @@ setTimeout(() => { document.getElementById('s4') && (document.getElementById('s4
 
 // ═══ TRL/MRL BARS ═══
 setTimeout(() => {
-  document.getElementById('trlBar').style.width = '66.7%';
-  document.getElementById('mrlBar').style.width = '66.7%';
+  const trlBar = document.getElementById('trlBar');
+  const mrlBar = document.getElementById('mrlBar');
+  if (trlBar) trlBar.style.width = '66.7%';
+  if (mrlBar) mrlBar.style.width = '66.7%';
 }, 300);
 
 // ═══ NAV ═══
@@ -1661,6 +1687,7 @@ const gridC = isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.04)';
 const txtC = isDark ? '#7d8694' : '#64748b';
 const cFont = { family: "'Instrument Sans', system-ui" };
 
+if (typeof Chart !== 'undefined' && document.getElementById('matChart')) {
 new Chart(document.getElementById('matChart'), {
   type: 'bar',
   data: {
@@ -1679,7 +1706,9 @@ new Chart(document.getElementById('matChart'), {
     plugins: { legend: { display: false }, tooltip: { backgroundColor: isDark ? '#232830' : '#0f172a', titleFont: cFont, bodyFont: cFont, cornerRadius: 8, padding: 10 } }
   }
 });
+}
 
+if (typeof Chart !== 'undefined' && document.getElementById('relChart')) {
 new Chart(document.getElementById('relChart'), {
   type: 'bar',
   data: {
@@ -1699,6 +1728,7 @@ new Chart(document.getElementById('relChart'), {
     plugins: { legend: { display: false }, tooltip: { mode: 'index', backgroundColor: isDark ? '#232830' : '#0f172a', titleFont: cFont, bodyFont: cFont, cornerRadius: 8, padding: 10 } }
   }
 });
+}
 </script>
 </body>
 </html>

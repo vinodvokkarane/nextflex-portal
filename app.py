@@ -42,7 +42,18 @@ def ensure_db():
     print(f"[startup] {result.stdout}", flush=True)
 
 
+def ensure_synthetic_file_chunks():
+    """Index synthetic PDF/PPTX content into chunks at startup so GraphRAG
+    queries hit ontology-grounded file content."""
+    try:
+        from synthetic_files import index_file_chunks_to_db
+        index_file_chunks_to_db()
+    except Exception as e:
+        print(f"[startup] WARNING: synthetic file chunk indexing failed: {e}", flush=True)
+
+
 ensure_db()
+ensure_synthetic_file_chunks()
 
 app = FastAPI(title="NextFlex Project Portal", version="2.0.0")
 app.add_middleware(
@@ -149,10 +160,24 @@ def manager():
 
 @app.get("/api/health")
 def health():
+    import time, os
+    t0 = time.time()
     try:
         with db() as conn:
             count = conn.execute("SELECT COUNT(*) FROM projects").fetchone()[0]
-        return {"status": "ok", "projects": count}
+            chunks = conn.execute("SELECT COUNT(*) FROM chunks").fetchone()[0]
+            entities = conn.execute("SELECT COUNT(*) FROM entities").fetchone()[0]
+        latency_ms = round((time.time() - t0) * 1000, 1)
+        return {
+            "status": "ok",
+            "projects": count,
+            "chunks": chunks,
+            "entities": entities,
+            "latency_ms": latency_ms,
+            "build": os.environ.get("RENDER_GIT_COMMIT", "dev")[:7] or "dev",
+            "version": "2.1.0",
+            "llm_enabled": bool(os.environ.get("ANTHROPIC_API_KEY")),
+        }
     except Exception as e:
         return JSONResponse({"status": "error", "detail": str(e)}, status_code=503)
 
@@ -291,6 +316,63 @@ def project_report(project_id: str, request: Request):
     return {"project": proj, "chunks": [dict(c) for c in chunks]}
 
 
+@app.get("/api/projects/{project_id}/files")
+def project_files_list(project_id: str, request: Request):
+    """Return metadata about the synthetic PDF + PPTX for a project."""
+    cls = role_classifications(request.state.user["role"])
+    with db() as conn:
+        prow = conn.execute(
+            "SELECT id, classification, title FROM projects WHERE id = ?",
+            (project_id,)
+        ).fetchone()
+    if not prow:
+        raise HTTPException(status_code=404, detail="not_found")
+    if prow["classification"] not in cls:
+        raise HTTPException(status_code=403, detail="not_authorized")
+    return {
+        "project_id": project_id,
+        "title": prow["title"],
+        "files": [
+            {"kind": "pdf", "name": f"{project_id}-final-report.pdf",
+             "url": f"/api/projects/{project_id}/files/pdf",
+             "description": "Final Report PDF (5-7 pages, ontology-classified materials/processes/results)"},
+            {"kind": "pptx", "name": f"{project_id}-briefing.pptx",
+             "url": f"/api/projects/{project_id}/files/pptx",
+             "description": "Project Briefing PPTX (8 slides, executive summary through transition pathway)"},
+        ],
+    }
+
+
+@app.get("/api/projects/{project_id}/files/{kind}")
+def project_file_download(project_id: str, kind: str, request: Request):
+    """Stream the synthetic PDF or PPTX file for a project."""
+    if kind not in ("pdf", "pptx"):
+        raise HTTPException(status_code=400, detail="kind_must_be_pdf_or_pptx")
+
+    cls = role_classifications(request.state.user["role"])
+    with db() as conn:
+        prow = conn.execute(
+            "SELECT classification FROM projects WHERE id = ?", (project_id,)
+        ).fetchone()
+    if not prow:
+        raise HTTPException(status_code=404, detail="not_found")
+    if prow["classification"] not in cls:
+        raise HTTPException(status_code=403, detail="not_authorized")
+
+    try:
+        from synthetic_files import get_or_generate_files
+        pdf_path, pptx_path = get_or_generate_files(project_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"generation_failed: {e}")
+
+    file_path = pdf_path if kind == "pdf" else pptx_path
+    media_type = "application/pdf" if kind == "pdf" else \
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+    filename = f"{project_id}-{'final-report' if kind == 'pdf' else 'briefing'}.{kind}"
+
+    return FileResponse(file_path, media_type=media_type, filename=filename)
+
+
 @app.get("/api/focus-areas")
 def list_focus_areas(request: Request):
     cls = role_classifications(request.state.user["role"])
@@ -315,6 +397,28 @@ def list_institutions(request: Request, top: int = Query(20, ge=1, le=100)):
             GROUP BY lead_institution ORDER BY count DESC LIMIT ?
         """, cls + [top]).fetchall()
     return [dict(r) for r in rows]
+
+
+@app.get("/api/entity-counts")
+def entity_counts_by_type(request: Request):
+    """Return counts grouped by ontology type and subtype, role-scoped."""
+    cls = role_classifications(request.state.user["role"])
+    ph = ",".join("?" * len(cls))
+    with db() as conn:
+        by_type = conn.execute(f"""
+            SELECT type, COUNT(*) AS count FROM entities
+            WHERE classification IN ({ph})
+            GROUP BY type ORDER BY count DESC
+        """, cls).fetchall()
+        by_subtype = conn.execute(f"""
+            SELECT type, subtype, COUNT(*) AS count FROM entities
+            WHERE classification IN ({ph}) AND subtype IS NOT NULL
+            GROUP BY type, subtype ORDER BY type, count DESC
+        """, cls).fetchall()
+    return {
+        "by_type": [dict(r) for r in by_type],
+        "by_subtype": [dict(r) for r in by_subtype],
+    }
 
 
 @app.get("/api/entities")
@@ -394,21 +498,45 @@ class GraphRAGRequest(BaseModel):
 
 
 def retrieve_chunks(conn, question: str, classifications: list, top_k: int = 6):
+    """Hybrid retrieval: pull top-ranked chunks across narrative + PDF + PPTX
+    so GraphRAG responses cite a diversity of sources (per-source-type top-k/3)."""
     tokens = re.findall(r"[A-Za-z0-9]+", question)
     if not tokens:
         return []
     fts_query = " OR ".join(f'"{t}"' for t in tokens)
     cph = ",".join("?" * len(classifications))
-    rows = conn.execute(f"""
-        SELECT c.id, c.text, c.section, c.page, c.project_id, c.classification,
-               p.title AS project_title, p.project_call, p.lead_institution,
-               p.focus_area, p.congressional_district
-        FROM chunks_fts fts JOIN chunks c ON c.id = fts.id
-        JOIN projects p ON p.id = c.project_id
-        WHERE chunks_fts MATCH ? AND p.classification IN ({cph})
-        ORDER BY rank LIMIT ?
-    """, [fts_query] + classifications + [top_k]).fetchall()
-    return [dict(r) for r in rows]
+
+    def fetch(section_clause, k):
+        sql = f"""
+            SELECT c.id, c.text, c.section, c.page, c.project_id, c.classification,
+                   p.title AS project_title, p.project_call, p.lead_institution,
+                   p.focus_area, p.congressional_district
+            FROM chunks_fts fts JOIN chunks c ON c.id = fts.id
+            JOIN projects p ON p.id = c.project_id
+            WHERE chunks_fts MATCH ? AND p.classification IN ({cph}) {section_clause}
+            ORDER BY rank LIMIT ?
+        """
+        return conn.execute(sql, [fts_query] + classifications + [k]).fetchall()
+
+    # Roughly 1/3 from each source type, but allow filling from any if a type is empty
+    third = max(1, top_k // 3)
+    pdf_rows = fetch("AND c.section LIKE 'pdf:%'", third)
+    pptx_rows = fetch("AND c.section LIKE 'pptx:%'", third)
+    narr_rows = fetch("AND c.section NOT LIKE 'pdf:%' AND c.section NOT LIKE 'pptx:%'",
+                      top_k - len(pdf_rows) - len(pptx_rows))
+
+    # If diversified set is short of top_k, top up with overall best matches
+    seen_ids = {r["id"] for r in (pdf_rows + pptx_rows + narr_rows)}
+    combined = list(pdf_rows) + list(pptx_rows) + list(narr_rows)
+    if len(combined) < top_k:
+        for extra in fetch("", top_k * 2):
+            if extra["id"] not in seen_ids:
+                combined.append(extra)
+                seen_ids.add(extra["id"])
+                if len(combined) >= top_k:
+                    break
+
+    return [dict(r) for r in combined[:top_k]]
 
 
 def retrieve_graph_context(conn, chunks):
@@ -509,12 +637,22 @@ def graphrag(req: GraphRAGRequest, request: Request):
          "project_title": c["project_title"], "project_call": c["project_call"],
          "lead_institution": c["lead_institution"], "focus_area": c["focus_area"],
          "section": c["section"], "page": c["page"],
-         "snippet": c["text"][:240] + ("..." if len(c["text"]) > 240 else "")}
+         "source_type": ("pdf" if c["section"].startswith("pdf:")
+                         else ("pptx" if c["section"].startswith("pptx:")
+                               else "narrative")),
+         "snippet": c["text"][:280] + ("..." if len(c["text"]) > 280 else "")}
         for i, c in enumerate(chunks)
     ]
+    # Tally file source coverage for the response
+    pdf_count = sum(1 for c in citations if c["source_type"] == "pdf")
+    pptx_count = sum(1 for c in citations if c["source_type"] == "pptx")
     return {
         "question": req.question, "answer": answer, "mode": mode,
         "citations": citations, "graph_entities": graph_ctx,
+        "source_breakdown": {
+            "pdf": pdf_count, "pptx": pptx_count,
+            "narrative": len(citations) - pdf_count - pptx_count,
+        },
     }
 
 

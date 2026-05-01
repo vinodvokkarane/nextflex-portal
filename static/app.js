@@ -17,6 +17,13 @@ async function loadSession() {
       badge.title = user.title;
     }
     window._currentUser = user;
+    // Populate status banner (non-critical, fire-and-forget)
+    fetch('/api/health').then(r => r.json()).then(h => {
+      const build = document.getElementById('statusBuild');
+      const lat = document.getElementById('statusLatency');
+      if (build) build.textContent = `v${h.version} · build ${h.build}`;
+      if (lat) lat.textContent = `Avg latency: ${h.latency_ms}ms`;
+    }).catch(() => {});
     return user;
   } catch (e) {
     console.error('Session load failed', e);
@@ -272,6 +279,28 @@ async function showProject(id) {
         </div>` : ''}
 
       <div class="modal-section">
+        <h3>Project documents</h3>
+        <div class="files-strip">
+          <a href="/api/projects/${encodeURIComponent(p.id)}/files/pdf" target="_blank" class="file-card">
+            <div class="file-icon pdf">PDF</div>
+            <div class="file-meta">
+              <div class="file-name">Final Report</div>
+              <div class="file-desc">Ontology-classified · 5–7 pages</div>
+            </div>
+            <div class="file-action">Download ↓</div>
+          </a>
+          <a href="/api/projects/${encodeURIComponent(p.id)}/files/pptx" target="_blank" class="file-card">
+            <div class="file-icon pptx">PPT</div>
+            <div class="file-meta">
+              <div class="file-name">Project Briefing</div>
+              <div class="file-desc">8 slides · executive → transition</div>
+            </div>
+            <div class="file-action">Download ↓</div>
+          </a>
+        </div>
+      </div>
+
+      <div class="modal-section">
         <h3>Keywords</h3>
         <div class="project-tags">
           ${(p.keywords || []).map((k) => `<span class="tag">${escapeHtml(k)}</span>`).join('')}
@@ -291,6 +320,69 @@ $('#modal').addEventListener('click', closeModal);
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') closeModal();
 });
+
+// ───── Drill-down navigation helpers ─────
+function goView(view) {
+  const btn = document.querySelector(`.nav-btn[data-view="${view}"]`);
+  if (btn) btn.click();
+}
+function goProjects() { goView('projects'); loadProjects(); }
+
+function filterByPC(pc) {
+  goView('projects');
+  const sel = $('#filterPC');
+  if (pc) sel.value = pc;
+  loadProjects();
+}
+function filterByFocus(focus) {
+  goView('projects');
+  const sel = $('#filterFocus');
+  if (focus) sel.value = focus;
+  loadProjects();
+}
+function filterByDistrict(code) {
+  goView('projects');
+  // Use the search box to filter by district (since we don't have a dedicated control)
+  goView('search');
+  $('#searchInput').value = code;
+  // But districts are an exact-match filter, not FTS — use the API directly
+  fetch(`/api/projects?district=${encodeURIComponent(code)}&limit=200`, {credentials: 'same-origin'})
+    .then(r => r.json())
+    .then(d => {
+      $('#searchResults').innerHTML = '';
+      const head = document.createElement('div');
+      head.style.cssText = 'padding:14px 16px;background:var(--card);border:1px solid var(--border);border-radius:8px;margin-bottom:12px';
+      head.innerHTML = `<div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Drilled in from district</div>
+        <div style="font-size:15px;font-weight:700">${escapeHtml(code)} — ${d.count} project${d.count === 1 ? '' : 's'}</div>`;
+      $('#searchResults').appendChild(head);
+      const list = document.createElement('div');
+      list.id = '_drilldown_list';
+      $('#searchResults').appendChild(list);
+      renderProjectList('#_drilldown_list', d.results);
+    });
+}
+function filterByPEO(peo) {
+  goView('search');
+  fetch(`/api/projects?peo=${encodeURIComponent(peo)}&limit=200`, {credentials: 'same-origin'})
+    .then(r => r.json())
+    .then(d => {
+      $('#searchResults').innerHTML = '';
+      const head = document.createElement('div');
+      head.style.cssText = 'padding:14px 16px;background:var(--card);border:1px solid var(--border);border-radius:8px;margin-bottom:12px';
+      head.innerHTML = `<div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">DoD PEO acquisition pathway</div>
+        <div style="font-size:15px;font-weight:700">${escapeHtml(peo)} — ${d.count} aligned project${d.count === 1 ? '' : 's'}</div>`;
+      $('#searchResults').appendChild(head);
+      const list = document.createElement('div');
+      list.id = '_drilldown_list';
+      $('#searchResults').appendChild(list);
+      renderProjectList('#_drilldown_list', d.results);
+    });
+}
+// Expose to global so manager dashboard inline handlers can navigate via parent window when needed
+window.filterByDistrict = filterByDistrict;
+window.filterByPEO = filterByPEO;
+window.filterByPC = filterByPC;
+window.filterByFocus = filterByFocus;
 
 // ───── Institutions ─────
 async function loadInstitutions() {

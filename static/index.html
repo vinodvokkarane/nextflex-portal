@@ -16,7 +16,7 @@
       <div class="brand-mark">NF</div>
       <div>
         <h1>NextFlex Project Portal</h1>
-        <p class="subtitle">Browse, search, and analyze Project Calls 1.0 – 10.0</p>
+        <p class="subtitle">Browse, search, and analyze Project Calls 1.0 – 10.2</p>
       </div>
     </div>
     <nav class="header-nav">
@@ -33,16 +33,45 @@
   </div>
 </header>
 
+<!-- ─── PRODUCTION STATUS BANNER ─── -->
+<div class="status-banner">
+  <div class="status-banner-inner">
+    <span class="status-pill green">
+      <span class="status-dot"></span>
+      All systems operational
+    </span>
+    <span class="status-meta">FedRAMP High · Zero Data Egress · CMMC L2+ aligned</span>
+    <span class="status-meta" id="statusBuild">v2.1.0 · build sha=…</span>
+    <span class="status-meta" id="statusLatency">Avg latency: …ms</span>
+  </div>
+</div>
+
 <main class="container">
 
   <!-- ─── DASHBOARD VIEW ─── -->
   <section id="view-dashboard" class="view active">
     <div class="stat-grid" id="statGrid">
-      <div class="stat-card"><div class="stat-label">Total projects</div><div class="stat-value" id="statTotal">—</div></div>
+      <div class="stat-card clickable" onclick="goProjects()" title="Browse all projects">
+        <div class="stat-label">Total projects</div>
+        <div class="stat-value" id="statTotal">—</div>
+        <div class="stat-hint">Click to browse →</div>
+      </div>
       <div class="stat-card"><div class="stat-label">Total funding</div><div class="stat-value" id="statFunding">—</div></div>
-      <div class="stat-card"><div class="stat-label">Project calls</div><div class="stat-value" id="statPCs">—</div></div>
-      <div class="stat-card"><div class="stat-label">Institutions</div><div class="stat-value" id="statInst">—</div></div>
-      <div class="stat-card"><div class="stat-label">Focus areas</div><div class="stat-value" id="statFocus">—</div></div>
+      <div class="stat-card clickable" onclick="filterByPC()" title="View all project calls">
+        <div class="stat-label">Project calls</div>
+        <div class="stat-value" id="statPCs">—</div>
+        <div class="stat-hint">Click to view →</div>
+      </div>
+      <div class="stat-card clickable" onclick="goView('institutions')" title="View institutions">
+        <div class="stat-label">Institutions</div>
+        <div class="stat-value" id="statInst">—</div>
+        <div class="stat-hint">Click to view →</div>
+      </div>
+      <div class="stat-card clickable" onclick="filterByFocus()" title="Browse focus areas">
+        <div class="stat-label">Focus areas</div>
+        <div class="stat-value" id="statFocus">—</div>
+        <div class="stat-hint">Click to browse →</div>
+      </div>
     </div>
 
     <div class="grid2">
