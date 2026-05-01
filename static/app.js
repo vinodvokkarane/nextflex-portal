@@ -1,6 +1,39 @@
 // NextFlex Project Portal — frontend logic
 const API = ''; // same origin
 
+// ───── Session ─────
+async function loadSession() {
+  try {
+    const res = await fetch('/api/auth/whoami');
+    if (!res.ok) {
+      window.location.href = '/manager/login';
+      return null;
+    }
+    const user = await res.json();
+    const badge = document.getElementById('userBadge');
+    if (badge) {
+      const roleLabel = { admin: 'Admin', dod: 'DoD', member: 'Member' }[user.role] || user.role;
+      badge.textContent = `${user.display_name} · ${roleLabel}`;
+      badge.title = user.title;
+    }
+    window._currentUser = user;
+    return user;
+  } catch (e) {
+    console.error('Session load failed', e);
+    window.location.href = '/manager/login';
+    return null;
+  }
+}
+
+async function logout() {
+  if (!confirm('Sign out?')) return;
+  try {
+    await fetch('/api/auth/logout', { method: 'POST' });
+  } finally {
+    window.location.href = '/manager/login';
+  }
+}
+
 // ───── State ─────
 let allPCs = [];
 let allFocusAreas = [];
@@ -313,4 +346,4 @@ $('#searchInput').addEventListener('keydown', (e) => {
 });
 
 // ───── Boot ─────
-loadDashboard();
+loadSession().then(() => loadDashboard());

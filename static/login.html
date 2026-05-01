@@ -185,7 +185,7 @@ form.addEventListener('submit', async (e) => {
       throw new Error(err.detail || 'Login failed');
     }
     // Success — redirect to the protected dashboard
-    window.location.href = '/manager';
+    window.location.href = '/';
   } catch (err) {
     errorBox.textContent = err.message === 'invalid_credentials'
       ? 'Invalid username or password.'

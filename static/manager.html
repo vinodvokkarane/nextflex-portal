@@ -1339,32 +1339,36 @@ function animateCounter(id, target, suffix='', duration=1400) {
   requestAnimationFrame(update);
 }
 // ═══ LIVE DATA FROM PORTAL API ═══
-// The manager dashboard now reflects actual portal metrics
+// The manager dashboard reflects ACTUAL portal metrics from /api/stats
 async function loadLivePortalStats() {
   try {
-    const [stats, pcs, focus] = await Promise.all([
+    const [stats, pcs, focus, districts, deployments, peos] = await Promise.all([
       fetch('/api/stats').then(r => r.json()),
       fetch('/api/project-calls').then(r => r.json()),
       fetch('/api/focus-areas').then(r => r.json()),
+      fetch('/api/districts').then(r => r.json()),
+      fetch('/api/deployments').then(r => r.json()),
+      fetch('/api/peos').then(r => r.json()),
     ]);
 
-    // Admin view — real portal numbers
-    animateCounter('s1', stats.total_projects);                      // Reports/projects ingested
-    animateCounter('s2', stats.total_projects * 39);                 // Knowledge graph entities (avg ~39 per project)
-    animateCounter('s5', 23);                                        // Congressional districts (mapped separately)
-    animateCounter('s6', Math.round(stats.total_projects * 0.07));   // Commercial deployments (~7% of projects transition)
-    animateCounter('s7', 5);                                         // DoD PEOs linked
+    // Admin view stats — all real from DB
+    animateCounter('s1', stats.total_projects);
+    animateCounter('s2', stats.entities);
+    animateCounter('s5', stats.districts);
+    animateCounter('s6', stats.deployments);
+    animateCounter('s7', stats.peos);
 
-    // Member view — same real numbers
-    animateCounter('m1', stats.total_projects);                      // Reports queryable
-    animateCounter('m2', stats.total_projects * 39);                 // KG entities
-    animateCounter('m3', stats.institutions);                        // Materials benchmarked (~ inst count)
+    // Member view stats
+    animateCounter('m1', stats.total_projects);
+    animateCounter('m2', stats.entities);
+    animateCounter('m3', stats.institutions);
 
-    // Geographic impact summary
-    animateCounter('districtCount', 23);
-    animateCounter('stateCount', 14);
+    // Geographic impact
+    animateCounter('districtCount', stats.districts);
+    const states = new Set(districts.map(d => d.state));
+    animateCounter('stateCount', states.size);
 
-    // Update header stats
+    // Update header live-data strip
     const headerEl = document.querySelector('.header h1');
     if (headerEl) {
       const subtitle = headerEl.parentElement.querySelector('.live-status');
@@ -1372,24 +1376,79 @@ async function loadLivePortalStats() {
         const liveTag = document.createElement('div');
         liveTag.className = 'live-status';
         liveTag.style.cssText = 'font-size:10px;color:#6ee7b7;margin-top:6px;font-weight:500;display:flex;align-items:center;gap:6px';
-        liveTag.innerHTML = `<span style="width:6px;height:6px;background:#6ee7b7;border-radius:50%;display:inline-block;animation:pulse 1.5s infinite"></span> Live data: ${stats.total_projects} projects · $${(stats.total_funding_usd/1e6).toFixed(1)}M tracked · ${pcs.length} PCs · ${focus.length} focus areas`;
+        liveTag.innerHTML = `<span style="width:6px;height:6px;background:#6ee7b7;border-radius:50%;display:inline-block;animation:pulse 1.5s infinite"></span> Live data: ${stats.total_projects} projects · $${(stats.total_funding_usd/1e6).toFixed(1)}M tracked · ${pcs.length} PCs · ${stats.entities} KG entities · ${stats.relationships} relationships · ${stats.chunks} chunks`;
         headerEl.parentElement.appendChild(liveTag);
       }
     }
+
+    // Hydrate dynamic panels (deployments, districts, PEOs)
+    hydrateDistrictsPanel(districts);
+    hydrateDeploymentsPanel(deployments);
+    hydratePeosPanel(peos);
+
   } catch (e) {
-    console.warn('Live data fetch failed, using demo defaults:', e);
-    // Fallback to original hardcoded values if API is unreachable
-    animateCounter('s1', 147);
-    animateCounter('s2', 3842);
-    animateCounter('s5', 23);
-    animateCounter('s6', 7);
-    animateCounter('s7', 5);
-    animateCounter('m1', 147);
-    animateCounter('m2', 3842);
-    animateCounter('m3', 286);
-    animateCounter('districtCount', 23);
-    animateCounter('stateCount', 14);
+    console.warn('Live data fetch failed:', e);
   }
+}
+
+// ═══ DYNAMIC PANEL HYDRATION ═══
+
+function hydrateDistrictsPanel(districts) {
+  const panel = document.querySelector('[data-panel="districts"]');
+  if (!panel || !districts.length) return;
+  panel.innerHTML = districts.slice(0, 12).map(d => `
+    <div style="padding:10px 14px;background:var(--bg);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;display:flex;align-items:center;gap:10px">
+      <span style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:11px;color:var(--teal);min-width:60px">${d.code}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:600">${d.state}</div>
+        <div style="font-size:10px;color:var(--muted)">${d.representative} (${d.party}) · ${(d.notable_orgs || []).slice(0, 2).join(', ')}</div>
+      </div>
+      <div style="text-align:right;font-size:11px;font-family:'JetBrains Mono',monospace">
+        <div style="color:var(--teal);font-weight:700">${d.project_count}</div>
+        <div style="color:var(--muted);font-size:9px">$${(d.total_funding/1e6).toFixed(1)}M</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function hydrateDeploymentsPanel(deployments) {
+  const panel = document.querySelector('[data-panel="deployments"]');
+  if (!panel || !deployments.length) return;
+  const statusColor = {
+    production: 'var(--green)', pilot: 'var(--amber)',
+    qualification: 'var(--indigo)', field_eval: 'var(--teal)', evaluation: 'var(--muted)',
+  };
+  panel.innerHTML = deployments.slice(0, 8).map(d => `
+    <div style="padding:12px 14px;background:var(--bg);border:1px solid var(--border);border-radius:8px;margin-bottom:6px">
+      <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:4px">
+        <span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:${statusColor[d.status] || 'var(--muted)'};border:1px solid currentColor;padding:2px 7px;border-radius:6px">${d.status.replace('_', ' ')}</span>
+        ${d.peo ? `<span style="font-size:9px;font-weight:700;color:var(--purple);background:rgba(99,102,241,.12);padding:2px 7px;border-radius:6px">${d.peo}</span>` : ''}
+      </div>
+      <div style="font-size:13px;font-weight:600;margin-bottom:2px">${d.title}</div>
+      <div style="font-size:11px;color:var(--muted)">${d.organization} · ${d.district || 'unattributed'}</div>
+    </div>
+  `).join('');
+}
+
+function hydratePeosPanel(peos) {
+  const panel = document.querySelector('[data-panel="peos"]');
+  if (!panel || !peos.length) return;
+  panel.innerHTML = peos.map(p => `
+    <div style="padding:14px;background:var(--bg);border:1px solid var(--border);border-radius:8px;margin-bottom:8px">
+      <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:6px">
+        <div style="width:44px;height:44px;border-radius:8px;background:linear-gradient(135deg,var(--navy),var(--purple));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;flex-shrink:0;text-align:center;line-height:1.1">${p.code.replace('PEO-', '').slice(0, 6)}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:700">${p.name}</div>
+          <div style="font-size:11px;color:var(--muted)">${p.location}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:18px;font-weight:700;color:var(--purple);font-family:'JetBrains Mono',monospace">${p.active_programs}</div>
+          <div style="font-size:9px;color:var(--muted);text-transform:uppercase">programs</div>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--text);line-height:1.5">${p.relevance}</div>
+    </div>
+  `).join('');
 }
 
 loadLivePortalStats();
@@ -1501,21 +1560,19 @@ function runQuery() {
 
   const btn = input.nextElementSibling;
   const origLabel = btn.textContent;
-  btn.textContent = 'Searching...';
+  btn.textContent = 'Thinking...';
   btn.disabled = true;
 
-  fetch(`/api/projects?q=${encodeURIComponent(q)}&limit=10`)
+  fetch('/api/graphrag', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({question: q}),
+  })
     .then(r => r.json())
     .then(data => {
       btn.textContent = origLabel;
       btn.disabled = false;
-
-      if (!data.results || data.results.length === 0) {
-        showQueryResults(q, [], 'No projects matched your query.');
-        return;
-      }
-
-      showQueryResults(q, data.results);
+      showQueryResults(data);
       input.value = '';
     })
     .catch(e => {
@@ -1525,8 +1582,7 @@ function runQuery() {
     });
 }
 
-function showQueryResults(query, results, emptyMsg) {
-  // Remove any prior result panel
+function showQueryResults(data) {
   const prior = document.getElementById('queryResultsPanel');
   if (prior) prior.remove();
 
@@ -1535,41 +1591,62 @@ function showQueryResults(query, results, emptyMsg) {
   panel.className = 'panel';
   panel.style.cssText = 'margin-top:12px;border:2px solid var(--teal);';
 
+  const modeBadge = data.mode === 'llm'
+    ? '<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;background:rgba(99,102,241,.12);color:var(--purple);border-radius:6px;font-size:10px;font-weight:600">★ LLM-synthesized</span>'
+    : '<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;background:rgba(10,143,143,.12);color:var(--teal);border-radius:6px;font-size:10px;font-weight:600">retrieval-only</span>';
+
   const header = `
     <h2 style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
       <span class="dot" style="background:var(--teal)"></span>
-      GraphRAG response — <span style="font-weight:500;color:var(--muted);font-size:12px">"${escapeHtml(query)}"</span>
+      GraphRAG response
+      ${modeBadge}
+      <span style="font-weight:500;color:var(--muted);font-size:12px;margin-left:8px">"${escapeHtml(data.question)}"</span>
       <button onclick="document.getElementById('queryResultsPanel').remove()" style="margin-left:auto;background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:18px;line-height:1">×</button>
     </h2>
-    <div style="font-size:11px;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;gap:8px">
-      <span style="display:inline-block;width:6px;height:6px;background:var(--green);border-radius:50%;animation:pulse 1.5s infinite"></span>
-      Pipeline: query → portal full-text search → ${results.length} sourced results · audit logged
-    </div>
   `;
 
-  let body = '';
-  if (results.length === 0) {
-    body = `<div style="padding:24px;text-align:center;color:var(--muted);font-style:italic">${escapeHtml(emptyMsg || 'No matches found')}</div>`;
-  } else {
-    body = '<div style="display:flex;flex-direction:column;gap:8px">' +
-      results.map((r, i) => `
-        <div style="padding:12px 14px;background:var(--bg);border:1px solid var(--border);border-radius:8px">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
-            <span style="font-family:'JetBrains Mono',monospace;font-size:10px;background:var(--light-teal);color:var(--teal);padding:2px 8px;border-radius:6px;font-weight:700">[${i + 1}] ${escapeHtml(r.project_call)}</span>
-            <span style="font-size:10px;color:var(--muted)">${escapeHtml(r.id)}</span>
-          </div>
-          <div style="font-size:13px;font-weight:600;margin-bottom:3px">${escapeHtml(r.title)}</div>
-          <div style="font-size:11px;color:var(--muted)">📍 ${escapeHtml(r.lead_institution || '—')} · ${escapeHtml(r.focus_area || '—')} · ${escapeHtml(r.congressional_district || '—')}</div>
-        </div>
-      `).join('') + '</div>';
+  // Synthesized answer
+  let answerHtml = '';
+  if (data.answer) {
+    // Inline citation linkification: turn [1] [2] into colored badges
+    const linkedAnswer = escapeHtml(data.answer).replace(/\[(\d+)\]/g, (_, n) =>
+      `<span style="display:inline-block;background:var(--teal);color:#fff;padding:0 6px;border-radius:4px;font-size:10px;font-weight:700;font-family:'JetBrains Mono',monospace;margin:0 2px;cursor:pointer" onclick="document.getElementById('cite-${n}').scrollIntoView({behavior:'smooth',block:'center'})">${n}</span>`
+    );
+    answerHtml = `
+      <div style="padding:14px 16px;background:linear-gradient(135deg,rgba(10,143,143,.06),rgba(99,102,241,.06));border:1px solid var(--border);border-radius:8px;margin-bottom:14px;line-height:1.7;font-size:13.5px">
+        ${linkedAnswer}
+      </div>
+    `;
   }
 
-  panel.innerHTML = header + body;
+  // Citations
+  let citeHtml = '';
+  if (data.citations && data.citations.length) {
+    citeHtml = `
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:8px">
+        <span style="display:inline-block;width:6px;height:6px;background:var(--green);border-radius:50%"></span>
+        ${data.citations.length} source-cited chunks · ${data.graph_entities ? data.graph_entities.length : 0} graph entities
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+    ` + data.citations.map(c => `
+      <div id="cite-${c.n}" style="padding:10px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:10px;background:var(--teal);color:#fff;padding:2px 8px;border-radius:6px;font-weight:700">[${c.n}]</span>
+          <span style="font-size:10px;color:var(--muted);font-weight:600">${escapeHtml(c.project_call)} · p.${c.page} · ${escapeHtml(c.section)}</span>
+        </div>
+        <div style="font-size:12px;font-weight:600;margin-bottom:2px">${escapeHtml(c.project_title)}</div>
+        <div style="font-size:10px;color:var(--muted);margin-bottom:5px">📍 ${escapeHtml(c.lead_institution || '—')} · ${escapeHtml(c.focus_area || '—')}</div>
+        <div style="font-size:11px;color:var(--text);font-style:italic;line-height:1.5">"${escapeHtml(c.snippet)}"</div>
+      </div>
+    `).join('') + '</div>';
+  } else {
+    citeHtml = '<div style="padding:24px;text-align:center;color:var(--muted);font-style:italic">No matching source chunks found.</div>';
+  }
 
-  // Insert right after the query section
+  panel.innerHTML = header + answerHtml + citeHtml;
   const querySection = document.querySelector('.query-section');
   querySection.parentNode.insertBefore(panel, querySection.nextSibling);
-  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  panel.scrollIntoView({behavior: 'smooth', block: 'nearest'});
 }
 
 function escapeHtml(s) {

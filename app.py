@@ -1,12 +1,16 @@
 """
-NextFlex Project Portal — a simple, fully-functioning web server
-serving project data for Project Calls 1.0 through 10.0.
+NextFlex Project Portal — comprehensive secured FastAPI server.
 
-Stack: FastAPI + SQLite + vanilla HTML/JS frontend.
-Run: uvicorn app:app --reload --port 8000
+All HTML pages and /api/* endpoints require authentication except:
+  - /manager/login, /api/auth/login, /api/health, /static/*
+
+GraphRAG endpoint uses Anthropic LLM if ANTHROPIC_API_KEY is set,
+otherwise returns deterministic retrieval-only synthesis.
 """
 
 import json
+import os
+import re
 import sqlite3
 import subprocess
 import sys
@@ -14,10 +18,11 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Optional
 
-from fastapi import FastAPI, HTTPException, Query, Request, Response, Form, Depends
+from fastapi import FastAPI, HTTPException, Query, Request, Response, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
 
 import auth
 
@@ -25,45 +30,30 @@ DB_PATH = Path(__file__).parent / "nextflex.db"
 STATIC_DIR = Path(__file__).parent / "static"
 
 
-# Auto-create the database on first boot.
-# This matters on hosts with ephemeral filesystems (e.g. Render free tier),
-# where the DB file is wiped on every redeploy and cold start.
 def ensure_db():
     if DB_PATH.exists():
         return
-    print(f"[startup] {DB_PATH} not found — initializing from init_db.py", flush=True)
+    print(f"[startup] Initializing DB", flush=True)
     init_script = Path(__file__).parent / "init_db.py"
-    result = subprocess.run(
-        [sys.executable, str(init_script)],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
+    result = subprocess.run([sys.executable, str(init_script)], capture_output=True, text=True)
     if result.returncode != 0:
         print(f"[startup] DB init failed:\n{result.stderr}", flush=True)
         raise RuntimeError("Database initialization failed")
-    print(f"[startup] DB ready: {result.stdout}", flush=True)
+    print(f"[startup] {result.stdout}", flush=True)
 
 
 ensure_db()
 
-app = FastAPI(
-    title="NextFlex Project Portal",
-    description="Browse, search, and analyze NextFlex Project Call data (PC 1.0–10.0)",
-    version="1.0.0",
-)
-
+app = FastAPI(title="NextFlex Project Portal", version="2.0.0")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=["*"], allow_methods=["*"], allow_headers=["*"],
+    allow_credentials=True,
 )
 
 
 @contextmanager
 def db():
-    """SQLite connection with row factory for dict-like access."""
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     try:
@@ -72,274 +62,464 @@ def db():
         conn.close()
 
 
-def row_to_dict(row: sqlite3.Row) -> dict:
-    """Convert a row, parsing JSON columns."""
+def parse_json_field(val):
+    if not val:
+        return []
+    try:
+        return json.loads(val)
+    except (json.JSONDecodeError, TypeError):
+        return []
+
+
+def row_to_dict(row):
     d = dict(row)
     for col in ("principal_investigators", "co_investigators", "industry_partners",
-                "materials_used", "processes_used", "publications", "patents", "keywords"):
-        if col in d and d[col]:
-            try:
-                d[col] = json.loads(d[col])
-            except (json.JSONDecodeError, TypeError):
-                d[col] = []
+                "materials_used", "processes_used", "publications", "patents",
+                "keywords", "properties", "source_project_ids", "notable_orgs",
+                "program_offices"):
+        if col in d:
+            d[col] = parse_json_field(d[col])
     return d
 
 
-# ─── API Endpoints ───
+# ────────── Site-wide auth gate ──────────
 
-@app.get("/api/health")
-def health():
-    """Liveness check + DB sanity."""
-    try:
-        with db() as conn:
-            count = conn.execute("SELECT COUNT(*) FROM projects").fetchone()[0]
-        return {"status": "ok", "projects_in_db": count}
-    except Exception as e:
-        return JSONResponse(status_code=503, content={"status": "error", "detail": str(e)})
+OPEN_PATHS = {"/manager/login", "/api/auth/login", "/api/health", "/favicon.ico"}
 
 
-@app.get("/api/project-calls")
-def list_project_calls():
-    """List all Project Calls with project counts and total funding."""
-    with db() as conn:
-        rows = conn.execute("""
-            SELECT
-                project_call,
-                COUNT(*) AS project_count,
-                SUM(funding_amount) AS total_funding,
-                MIN(start_date) AS earliest,
-                MAX(end_date) AS latest
-            FROM projects
-            GROUP BY project_call
-            ORDER BY project_call
-        """).fetchall()
-    return [dict(r) for r in rows]
-
-
-@app.get("/api/projects")
-def list_projects(
-    pc: Optional[str] = Query(None, description="Filter by project call e.g. 'PC 7.1'"),
-    focus: Optional[str] = Query(None, description="Filter by focus area"),
-    institution: Optional[str] = Query(None, description="Filter by lead institution"),
-    status: Optional[str] = Query(None, description="completed | in-progress"),
-    q: Optional[str] = Query(None, description="Full-text search across title, abstract, materials, processes"),
-    limit: int = Query(100, ge=1, le=500),
-    offset: int = Query(0, ge=0),
-):
-    """List projects with optional filters and full-text search."""
-    with db() as conn:
-        if q:
-            # Sanitize for FTS5: strip operator characters that would crash the parser
-            # (hyphens, double quotes, parentheses, asterisks at unsafe positions, etc.)
-            # Strategy: keep alphanumerics + spaces, then quote each token to force literal match
-            import re
-            tokens = re.findall(r"[A-Za-z0-9]+", q)
-            if not tokens:
-                # Nothing searchable
-                return {"count": 0, "limit": limit, "offset": offset, "results": []}
-            # Wrap each token in double quotes so FTS5 treats them as literals
-            fts_query = " ".join(f'"{t}"' for t in tokens)
-
-            # Full-text search via FTS5 virtual table
-            sql = """
-                SELECT p.* FROM projects p
-                JOIN projects_fts fts ON p.id = fts.id
-                WHERE projects_fts MATCH ?
-            """
-            params = [fts_query]
-            if pc:
-                sql += " AND p.project_call = ?"
-                params.append(pc)
-            if focus:
-                sql += " AND p.focus_area = ?"
-                params.append(focus)
-            if institution:
-                sql += " AND p.lead_institution LIKE ?"
-                params.append(f"%{institution}%")
-            if status:
-                sql += " AND p.status = ?"
-                params.append(status)
-            sql += " ORDER BY rank LIMIT ? OFFSET ?"
-            params.extend([limit, offset])
-        else:
-            conditions = ["1=1"]
-            params = []
-            if pc:
-                conditions.append("project_call = ?")
-                params.append(pc)
-            if focus:
-                conditions.append("focus_area = ?")
-                params.append(focus)
-            if institution:
-                conditions.append("lead_institution LIKE ?")
-                params.append(f"%{institution}%")
-            if status:
-                conditions.append("status = ?")
-                params.append(status)
-            sql = f"""
-                SELECT * FROM projects
-                WHERE {' AND '.join(conditions)}
-                ORDER BY project_call, id
-                LIMIT ? OFFSET ?
-            """
-            params.extend([limit, offset])
-
-        rows = conn.execute(sql, params).fetchall()
-
-    return {
-        "count": len(rows),
-        "limit": limit,
-        "offset": offset,
-        "results": [row_to_dict(r) for r in rows],
-    }
-
-
-@app.get("/api/projects/{project_id}")
-def get_project(project_id: str):
-    """Get a single project by ID."""
-    with db() as conn:
-        row = conn.execute("SELECT * FROM projects WHERE id = ?", (project_id,)).fetchone()
-    if not row:
-        raise HTTPException(status_code=404, detail=f"Project {project_id} not found")
-    return row_to_dict(row)
-
-
-@app.get("/api/focus-areas")
-def list_focus_areas():
-    """Distinct focus areas with counts."""
-    with db() as conn:
-        rows = conn.execute("""
-            SELECT focus_area, COUNT(*) AS count
-            FROM projects
-            WHERE focus_area IS NOT NULL
-            GROUP BY focus_area
-            ORDER BY count DESC
-        """).fetchall()
-    return [dict(r) for r in rows]
-
-
-@app.get("/api/institutions")
-def list_institutions(top: int = Query(20, ge=1, le=100)):
-    """Top institutions by project count."""
-    with db() as conn:
-        rows = conn.execute("""
-            SELECT lead_institution, COUNT(*) AS count, SUM(funding_amount) AS total_funding
-            FROM projects
-            WHERE lead_institution IS NOT NULL
-            GROUP BY lead_institution
-            ORDER BY count DESC, total_funding DESC
-            LIMIT ?
-        """, (top,)).fetchall()
-    return [dict(r) for r in rows]
-
-
-@app.get("/api/stats")
-def overall_stats():
-    """Top-level dashboard statistics."""
-    with db() as conn:
-        c = conn.cursor()
-        total = c.execute("SELECT COUNT(*) FROM projects").fetchone()[0]
-        funding = c.execute("SELECT SUM(funding_amount) FROM projects").fetchone()[0] or 0
-        n_pc = c.execute("SELECT COUNT(DISTINCT project_call) FROM projects").fetchone()[0]
-        n_inst = c.execute("SELECT COUNT(DISTINCT lead_institution) FROM projects").fetchone()[0]
-        n_focus = c.execute("SELECT COUNT(DISTINCT focus_area) FROM projects").fetchone()[0]
-        completed = c.execute("SELECT COUNT(*) FROM projects WHERE status = 'completed'").fetchone()[0]
-        in_progress = c.execute("SELECT COUNT(*) FROM projects WHERE status = 'in-progress'").fetchone()[0]
-
-        # Funding by year (extracted from start_date)
-        by_year = c.execute("""
-            SELECT substr(start_date, 1, 4) AS year, COUNT(*) AS projects, SUM(funding_amount) AS funding
-            FROM projects
-            WHERE start_date IS NOT NULL
-            GROUP BY year
-            ORDER BY year
-        """).fetchall()
-
-    return {
-        "total_projects": total,
-        "total_funding_usd": funding,
-        "project_calls": n_pc,
-        "institutions": n_inst,
-        "focus_areas": n_focus,
-        "completed": completed,
-        "in_progress": in_progress,
-        "by_year": [dict(r) for r in by_year],
-    }
-
-
-# ─── Static frontend ───
-# Serve the frontend; FastAPI catches /api/* first, then falls through to static.
-app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
-
-
-@app.get("/")
-def root():
-    """Serve the SPA entry point."""
-    return FileResponse(STATIC_DIR / "index.html")
-
-
-@app.get("/manager")
-def manager_dashboard(request: Request):
-    """Serve the NextFlex Program Manager dashboard. Requires login."""
+@app.middleware("http")
+async def auth_gate(request: Request, call_next):
+    path = request.url.path
+    if path.startswith("/static/") or path in OPEN_PATHS:
+        return await call_next(request)
     user = auth.current_user(request)
     if not user:
+        if path.startswith("/api/"):
+            return JSONResponse({"detail": "not_authenticated"}, status_code=401)
         return RedirectResponse(url="/manager/login", status_code=302)
-    return FileResponse(STATIC_DIR / "manager.html")
+    request.state.user = user
+    return await call_next(request)
 
 
-@app.get("/manager/login")
-def manager_login_page(request: Request):
-    """Login form for the manager dashboard."""
-    # If already logged in, skip the form
-    if auth.current_user(request):
-        return RedirectResponse(url="/manager", status_code=302)
-    return FileResponse(STATIC_DIR / "login.html")
-
+# ────────── Auth endpoints ──────────
 
 @app.post("/api/auth/login")
-def login(
-    response: Response,
-    username: str = Form(...),
-    password: str = Form(...),
-):
-    """Authenticate and issue a session cookie."""
+def login(response: Response, username: str = Form(...), password: str = Form(...)):
     user = auth.authenticate(username.strip(), password)
     if not user:
         raise HTTPException(status_code=401, detail="invalid_credentials")
-
     token = auth.issue_token(user)
     response.set_cookie(
-        key=auth.COOKIE_NAME,
-        value=token,
+        key=auth.COOKIE_NAME, value=token,
         max_age=auth.JWT_EXPIRY_HOURS * 3600,
-        httponly=True,        # JS can't read it -> XSS mitigation
-        secure=True,          # only sent over HTTPS (Render serves HTTPS)
-        samesite="strict",    # CSRF mitigation
-        path="/",
+        httponly=True, secure=True, samesite="strict", path="/",
     )
-    return {
-        "username": user["username"],
-        "role": user["role"],
-        "display_name": user["display_name"],
-        "title": user["title"],
-        "avatar": user["avatar"],
-    }
+    return {k: user[k] for k in ("username", "role", "display_name", "title", "avatar")}
 
 
 @app.post("/api/auth/logout")
 def logout(response: Response):
-    """Clear the session cookie."""
     response.delete_cookie(key=auth.COOKIE_NAME, path="/")
     return {"status": "logged_out"}
 
 
 @app.get("/api/auth/whoami")
 def whoami(request: Request):
-    """Return the current user's identity (used by the dashboard on load)."""
-    user = auth.current_user(request)
-    if not user:
-        raise HTTPException(status_code=401, detail="not_authenticated")
-    return user
+    return request.state.user
+
+
+# ────────── Pages ──────────
+
+@app.get("/manager/login")
+def login_page(request: Request):
+    if auth.current_user(request):
+        return RedirectResponse(url="/", status_code=302)
+    return FileResponse(STATIC_DIR / "login.html")
+
+
+@app.get("/")
+def root():
+    return FileResponse(STATIC_DIR / "index.html")
+
+
+@app.get("/manager")
+def manager():
+    return FileResponse(STATIC_DIR / "manager.html")
+
+
+@app.get("/api/health")
+def health():
+    try:
+        with db() as conn:
+            count = conn.execute("SELECT COUNT(*) FROM projects").fetchone()[0]
+        return {"status": "ok", "projects": count}
+    except Exception as e:
+        return JSONResponse({"status": "error", "detail": str(e)}, status_code=503)
+
+
+# ────────── Role-scoped data endpoints ──────────
+
+def role_classifications(role: str) -> list[str]:
+    if role == "admin":
+        return ["public", "member_share", "mission_relevant", "cui"]
+    if role == "dod":
+        return ["public", "mission_relevant", "cui"]
+    if role == "member":
+        return ["public", "member_share"]
+    return ["public"]
+
+
+@app.get("/api/stats")
+def overall_stats(request: Request):
+    user = request.state.user
+    cls = role_classifications(user["role"])
+    ph = ",".join("?" * len(cls))
+    with db() as conn:
+        total = conn.execute(f"SELECT COUNT(*) FROM projects WHERE classification IN ({ph})", cls).fetchone()[0]
+        funding = conn.execute(f"SELECT SUM(funding_amount) FROM projects WHERE classification IN ({ph})", cls).fetchone()[0] or 0
+        n_pc = conn.execute(f"SELECT COUNT(DISTINCT project_call) FROM projects WHERE classification IN ({ph})", cls).fetchone()[0]
+        n_inst = conn.execute(f"SELECT COUNT(DISTINCT lead_institution) FROM projects WHERE classification IN ({ph})", cls).fetchone()[0]
+        n_focus = conn.execute(f"SELECT COUNT(DISTINCT focus_area) FROM projects WHERE classification IN ({ph})", cls).fetchone()[0]
+        n_ent = conn.execute(f"SELECT COUNT(*) FROM entities WHERE classification IN ({ph})", cls).fetchone()[0]
+        n_rel = conn.execute("SELECT COUNT(*) FROM relationships").fetchone()[0]
+        n_chunks = conn.execute("SELECT COUNT(*) FROM chunks").fetchone()[0]
+        n_districts = conn.execute("SELECT COUNT(*) FROM districts WHERE project_count > 0").fetchone()[0]
+        n_deploy = conn.execute("SELECT COUNT(*) FROM deployments").fetchone()[0]
+        n_peos = conn.execute("SELECT COUNT(*) FROM peos").fetchone()[0]
+        by_year = conn.execute(f"""
+            SELECT substr(start_date, 1, 4) AS year, COUNT(*) AS projects, SUM(funding_amount) AS funding
+            FROM projects WHERE classification IN ({ph})
+            GROUP BY year ORDER BY year
+        """, cls).fetchall()
+    return {
+        "total_projects": total, "total_funding_usd": funding,
+        "project_calls": n_pc, "institutions": n_inst, "focus_areas": n_focus,
+        "entities": n_ent, "relationships": n_rel, "chunks": n_chunks,
+        "districts": n_districts, "deployments": n_deploy, "peos": n_peos,
+        "by_year": [dict(r) for r in by_year],
+        "role": user["role"],
+    }
+
+
+@app.get("/api/project-calls")
+def list_project_calls(request: Request):
+    cls = role_classifications(request.state.user["role"])
+    ph = ",".join("?" * len(cls))
+    with db() as conn:
+        rows = conn.execute(f"""
+            SELECT project_call, COUNT(*) AS project_count, SUM(funding_amount) AS total_funding,
+                   MIN(start_date) AS earliest, MAX(end_date) AS latest
+            FROM projects WHERE classification IN ({ph})
+            GROUP BY project_call ORDER BY project_call
+        """, cls).fetchall()
+    return [dict(r) for r in rows]
+
+
+@app.get("/api/projects")
+def list_projects(
+    request: Request,
+    pc: Optional[str] = None, focus: Optional[str] = None,
+    institution: Optional[str] = None, status: Optional[str] = None,
+    district: Optional[str] = None, peo: Optional[str] = None,
+    q: Optional[str] = None,
+    limit: int = Query(100, ge=1, le=500), offset: int = Query(0, ge=0),
+):
+    cls = role_classifications(request.state.user["role"])
+    cph = ",".join("?" * len(cls))
+    with db() as conn:
+        if q:
+            tokens = re.findall(r"[A-Za-z0-9]+", q)
+            if not tokens:
+                return {"count": 0, "limit": limit, "offset": offset, "results": []}
+            fts_query = " ".join(f'"{t}"' for t in tokens)
+            sql = f"""
+                SELECT p.* FROM projects p JOIN projects_fts fts ON p.id = fts.id
+                WHERE projects_fts MATCH ? AND p.classification IN ({cph})
+            """
+            params = [fts_query] + cls
+            order_clause = " ORDER BY rank"
+        else:
+            sql = f"SELECT * FROM projects WHERE classification IN ({cph})"
+            params = list(cls)
+            order_clause = " ORDER BY project_call, id"
+        if pc:
+            sql += " AND project_call = ?"; params.append(pc)
+        if focus:
+            sql += " AND focus_area = ?"; params.append(focus)
+        if institution:
+            sql += " AND lead_institution LIKE ?"; params.append(f"%{institution}%")
+        if status:
+            sql += " AND status = ?"; params.append(status)
+        if district:
+            sql += " AND congressional_district = ?"; params.append(district)
+        if peo:
+            sql += " AND peo = ?"; params.append(peo)
+        sql += order_clause + " LIMIT ? OFFSET ?"
+        params.extend([limit, offset])
+        rows = conn.execute(sql, params).fetchall()
+    return {"count": len(rows), "limit": limit, "offset": offset,
+            "results": [row_to_dict(r) for r in rows]}
+
+
+@app.get("/api/projects/{project_id}")
+def get_project(project_id: str, request: Request):
+    cls = role_classifications(request.state.user["role"])
+    with db() as conn:
+        row = conn.execute("SELECT * FROM projects WHERE id = ?", (project_id,)).fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="not_found")
+    proj = row_to_dict(row)
+    if proj["classification"] not in cls:
+        raise HTTPException(status_code=403, detail="not_authorized")
+    return proj
+
+
+@app.get("/api/projects/{project_id}/report")
+def project_report(project_id: str, request: Request):
+    cls = role_classifications(request.state.user["role"])
+    with db() as conn:
+        prow = conn.execute("SELECT * FROM projects WHERE id = ?", (project_id,)).fetchone()
+        if not prow:
+            raise HTTPException(status_code=404, detail="not_found")
+        proj = row_to_dict(prow)
+        if proj["classification"] not in cls:
+            raise HTTPException(status_code=403, detail="not_authorized")
+        chunks = conn.execute(
+            "SELECT id, section, page, text FROM chunks WHERE project_id = ? ORDER BY page",
+            (project_id,)
+        ).fetchall()
+    return {"project": proj, "chunks": [dict(c) for c in chunks]}
+
+
+@app.get("/api/focus-areas")
+def list_focus_areas(request: Request):
+    cls = role_classifications(request.state.user["role"])
+    ph = ",".join("?" * len(cls))
+    with db() as conn:
+        rows = conn.execute(f"""
+            SELECT focus_area, COUNT(*) AS count FROM projects
+            WHERE focus_area IS NOT NULL AND classification IN ({ph})
+            GROUP BY focus_area ORDER BY count DESC
+        """, cls).fetchall()
+    return [dict(r) for r in rows]
+
+
+@app.get("/api/institutions")
+def list_institutions(request: Request, top: int = Query(20, ge=1, le=100)):
+    cls = role_classifications(request.state.user["role"])
+    ph = ",".join("?" * len(cls))
+    with db() as conn:
+        rows = conn.execute(f"""
+            SELECT lead_institution, COUNT(*) AS count, SUM(funding_amount) AS total_funding
+            FROM projects WHERE lead_institution IS NOT NULL AND classification IN ({ph})
+            GROUP BY lead_institution ORDER BY count DESC LIMIT ?
+        """, cls + [top]).fetchall()
+    return [dict(r) for r in rows]
+
+
+@app.get("/api/entities")
+def list_entities(request: Request,
+                  type: Optional[str] = None, subtype: Optional[str] = None,
+                  q: Optional[str] = None, limit: int = Query(100, ge=1, le=500)):
+    cls = role_classifications(request.state.user["role"])
+    ph = ",".join("?" * len(cls))
+    sql = f"SELECT * FROM entities WHERE classification IN ({ph})"
+    params = list(cls)
+    if type:
+        sql += " AND type = ?"; params.append(type)
+    if subtype:
+        sql += " AND subtype = ?"; params.append(subtype)
+    if q:
+        sql += " AND name LIKE ?"; params.append(f"%{q}%")
+    sql += " ORDER BY type, name LIMIT ?"
+    params.append(limit)
+    with db() as conn:
+        rows = conn.execute(sql, params).fetchall()
+    return {"count": len(rows), "results": [row_to_dict(r) for r in rows]}
+
+
+@app.get("/api/entities/{entity_id}")
+def get_entity(entity_id: str, request: Request):
+    cls = role_classifications(request.state.user["role"])
+    with db() as conn:
+        row = conn.execute("SELECT * FROM entities WHERE id = ?", (entity_id,)).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="not_found")
+        ent = row_to_dict(row)
+        if ent["classification"] not in cls:
+            raise HTTPException(status_code=403, detail="not_authorized")
+        rels_out = conn.execute("""
+            SELECT r.rel_type, r.confidence, e.id, e.name, e.type, e.subtype
+            FROM relationships r JOIN entities e ON r.to_id = e.id
+            WHERE r.from_id = ? LIMIT 50
+        """, (entity_id,)).fetchall()
+        rels_in = conn.execute("""
+            SELECT r.rel_type, r.confidence, e.id, e.name, e.type, e.subtype
+            FROM relationships r JOIN entities e ON r.from_id = e.id
+            WHERE r.to_id = ? LIMIT 50
+        """, (entity_id,)).fetchall()
+        ent["outgoing"] = [dict(r) for r in rels_out]
+        ent["incoming"] = [dict(r) for r in rels_in]
+    return ent
+
+
+@app.get("/api/districts")
+def list_districts(request: Request):
+    with db() as conn:
+        rows = conn.execute("""
+            SELECT * FROM districts WHERE project_count > 0
+            ORDER BY project_count DESC, total_funding DESC
+        """).fetchall()
+    return [row_to_dict(r) for r in rows]
+
+
+@app.get("/api/deployments")
+def list_deployments(request: Request):
+    with db() as conn:
+        rows = conn.execute("SELECT * FROM deployments ORDER BY deploy_date DESC").fetchall()
+    return [row_to_dict(r) for r in rows]
+
+
+@app.get("/api/peos")
+def list_peos(request: Request):
+    with db() as conn:
+        rows = conn.execute("SELECT * FROM peos ORDER BY active_programs DESC").fetchall()
+    return [row_to_dict(r) for r in rows]
+
+
+# ────────── GraphRAG ──────────
+
+class GraphRAGRequest(BaseModel):
+    question: str
+
+
+def retrieve_chunks(conn, question: str, classifications: list, top_k: int = 6):
+    tokens = re.findall(r"[A-Za-z0-9]+", question)
+    if not tokens:
+        return []
+    fts_query = " OR ".join(f'"{t}"' for t in tokens)
+    cph = ",".join("?" * len(classifications))
+    rows = conn.execute(f"""
+        SELECT c.id, c.text, c.section, c.page, c.project_id, c.classification,
+               p.title AS project_title, p.project_call, p.lead_institution,
+               p.focus_area, p.congressional_district
+        FROM chunks_fts fts JOIN chunks c ON c.id = fts.id
+        JOIN projects p ON p.id = c.project_id
+        WHERE chunks_fts MATCH ? AND p.classification IN ({cph})
+        ORDER BY rank LIMIT ?
+    """, [fts_query] + classifications + [top_k]).fetchall()
+    return [dict(r) for r in rows]
+
+
+def retrieve_graph_context(conn, chunks):
+    project_ids = list({c["project_id"] for c in chunks})
+    if not project_ids:
+        return []
+    pid_set = set(project_ids)
+    related = []
+    for e in conn.execute("SELECT id, name, type, subtype, source_project_ids FROM entities").fetchall():
+        srcs = parse_json_field(e["source_project_ids"])
+        if any(s in pid_set for s in srcs):
+            related.append({"id": e["id"], "name": e["name"], "type": e["type"], "subtype": e["subtype"]})
+            if len(related) >= 20:
+                break
+    return related
+
+
+def synthesize_offline(question, chunks, graph_ctx, role):
+    if not chunks:
+        return ("I couldn't find any source material matching your question in the corpus "
+                "you have access to. Try simpler keywords like 'silver ink', 'phased array', "
+                "'Kapton', or 'BST dielectric'.")
+    pcs = sorted({c["project_call"] for c in chunks})
+    insts = sorted({c["lead_institution"] for c in chunks if c["lead_institution"]})
+    ent_names = ", ".join(e["name"] for e in graph_ctx[:6]) or "various entities"
+    sections = sorted({c["section"] for c in chunks})
+    return (
+        f"Based on retrieval across {len(chunks)} source chunks from {len(pcs)} project call(s) "
+        f"({', '.join(pcs)}), I found relevant material spanning {', '.join(sections)} sections. "
+        f"Lead institutions involved: {', '.join(insts[:3])}{' and others' if len(insts) > 3 else ''}. "
+        f"The knowledge graph links these projects to entities including {ent_names}. "
+        f"Specific source citations are listed below."
+    )
+
+
+def synthesize_llm(question, chunks, graph_ctx, role):
+    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    if not api_key:
+        return synthesize_offline(question, chunks, graph_ctx, role)
+    try:
+        from anthropic import Anthropic
+    except ImportError:
+        return synthesize_offline(question, chunks, graph_ctx, role)
+
+    client = Anthropic(api_key=api_key)
+    chunk_block = "\n\n".join(
+        f"[{i+1}] (PC {c['project_call']}, {c['lead_institution']}, p.{c['page']}, section: {c['section']})\n{c['text']}"
+        for i, c in enumerate(chunks)
+    )
+    graph_block = ", ".join(f"{e['name']} ({e['type']})" for e in graph_ctx[:10]) or "(none)"
+    role_guidance = {
+        "admin": "You have full access. Answer comprehensively.",
+        "dod": "Focus on mission relevance, RF performance, and acquisition pathways.",
+        "member": "Focus on technical materials, processes, and performance characterization.",
+    }.get(role, "")
+    system = (
+        "You are the NextFlex Project Portal GraphRAG assistant. "
+        "Answer using ONLY the provided source chunks. "
+        "Cite sources inline using [N] notation matching the chunk numbers. "
+        "Be concise (3-5 sentences). Do not invent data. " + role_guidance
+    )
+    user_msg = (
+        f"Question: {question}\n\n"
+        f"Knowledge graph entities: {graph_block}\n\n"
+        f"Source chunks:\n{chunk_block}\n\n"
+        f"Provide your answer with inline citations."
+    )
+    try:
+        resp = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=600, system=system,
+            messages=[{"role": "user", "content": user_msg}],
+        )
+        return resp.content[0].text
+    except Exception as e:
+        print(f"[graphrag] LLM call failed: {e}", flush=True)
+        return synthesize_offline(question, chunks, graph_ctx, role)
+
+
+@app.post("/api/graphrag")
+def graphrag(req: GraphRAGRequest, request: Request):
+    user = request.state.user
+    cls = role_classifications(user["role"])
+    if not req.question.strip():
+        raise HTTPException(status_code=400, detail="empty_question")
+    with db() as conn:
+        chunks = retrieve_chunks(conn, req.question, cls, top_k=8)
+        graph_ctx = retrieve_graph_context(conn, chunks)
+    has_llm = bool(os.environ.get("ANTHROPIC_API_KEY"))
+    if has_llm:
+        answer = synthesize_llm(req.question, chunks, graph_ctx, user["role"])
+        mode = "llm"
+    else:
+        answer = synthesize_offline(req.question, chunks, graph_ctx, user["role"])
+        mode = "retrieval-only"
+    citations = [
+        {"n": i + 1, "chunk_id": c["id"], "project_id": c["project_id"],
+         "project_title": c["project_title"], "project_call": c["project_call"],
+         "lead_institution": c["lead_institution"], "focus_area": c["focus_area"],
+         "section": c["section"], "page": c["page"],
+         "snippet": c["text"][:240] + ("..." if len(c["text"]) > 240 else "")}
+        for i, c in enumerate(chunks)
+    ]
+    return {
+        "question": req.question, "answer": answer, "mode": mode,
+        "citations": citations, "graph_entities": graph_ctx,
+    }
+
+
+# ────────── Static assets ──────────
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 
 if __name__ == "__main__":
