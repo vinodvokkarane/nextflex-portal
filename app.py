@@ -55,47 +55,13 @@ def ensure_synthetic_file_chunks():
 def ensure_public_dataset():
     """Index real NextFlex papers + funded assets at startup.
 
-    Runs in a subprocess so that the ~500 MB peak memory of pypdf's
-    text extraction is fully released back to the OS before the
-    FastAPI server starts handling requests. Without this, Render's
-    free tier (512 MB) OOMs during cold-start.
+    Reads pre-extracted text from public_data/extracted_corpus.json
+    (built offline via build_extracted_corpus.py). No pypdf or
+    python-pptx at runtime, so memory stays under 100 MB.
     """
     try:
-        # Quick check: skip subprocess if already indexed in DB
-        import sqlite3
-        from public_dataset import DB_PATH
-        if DB_PATH.exists():
-            try:
-                conn = sqlite3.connect(DB_PATH)
-                row = conn.execute(
-                    "SELECT COUNT(*) FROM public_assets"
-                ).fetchone()
-                conn.close()
-                if row and row[0] > 0:
-                    print(f"[startup] {row[0]} public assets already indexed", flush=True)
-                    return
-            except sqlite3.OperationalError:
-                # Table doesn't exist yet — proceed with indexing
-                pass
-
-        print(f"[startup] Indexing public dataset in subprocess "
-              f"(memory-isolated to avoid OOM)", flush=True)
-        public_script = Path(__file__).parent / "public_dataset.py"
-        result = subprocess.run(
-            [sys.executable, str(public_script)],
-            capture_output=True, text=True, timeout=180,
-        )
-        if result.stdout:
-            for line in result.stdout.strip().split("\n"):
-                print(f"[public-data] {line}", flush=True)
-        if result.returncode != 0:
-            print(f"[startup] WARNING: public dataset indexing exited "
-                  f"with code {result.returncode}", flush=True)
-            if result.stderr:
-                print(f"[public-data][stderr] {result.stderr[:1000]}", flush=True)
-    except subprocess.TimeoutExpired:
-        print(f"[startup] WARNING: public dataset indexing timed out "
-              f"after 180s — server will start with partial corpus", flush=True)
+        from public_dataset import index_public_dataset
+        index_public_dataset()
     except Exception as e:
         print(f"[startup] WARNING: public dataset indexing failed: {e}",
               flush=True)
