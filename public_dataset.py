@@ -81,25 +81,39 @@ def _infer_project_call(text: str, default: str = "") -> str:
     return default
 
 
-def _extract_pdf_text(path: Path, max_pages: int = 40) -> tuple[str, int]:
-    """Extract text from a PDF. Returns (text, pages_total)."""
+def _extract_pdf_text(path: Path, max_pages: int = 40, max_chars: int = 200_000) -> tuple[str, int]:
+    """Extract text from a PDF, streaming page-by-page to keep memory low.
+
+    Returns (text, pages_total). Caps output to max_chars to prevent any
+    single huge PDF from blowing up memory.
+    """
     try:
         import pypdf
     except ImportError:
         return "", 0
+    text_parts = []
+    total_chars = 0
+    pages_total = 0
     try:
-        reader = pypdf.PdfReader(str(path))
-        pages_total = len(reader.pages)
-        chunks = []
-        for i, page in enumerate(reader.pages[:max_pages]):
-            try:
-                chunks.append(page.extract_text() or "")
-            except Exception:
-                pass
-        return "\n".join(chunks), pages_total
+        with open(path, "rb") as fh:
+            reader = pypdf.PdfReader(fh)
+            pages_total = len(reader.pages)
+            for i in range(min(pages_total, max_pages)):
+                if total_chars >= max_chars:
+                    break
+                try:
+                    page_text = reader.pages[i].extract_text() or ""
+                except Exception:
+                    page_text = ""
+                if page_text:
+                    text_parts.append(page_text)
+                    total_chars += len(page_text)
+            # Drop the reader before returning so its caches can be GC'd
+            del reader
     except Exception as e:
         print(f"[public-data] pdf extract failed for {path.name}: {e}", flush=True)
         return "", 0
+    return "\n".join(text_parts), pages_total
 
 
 def _extract_pptx_text(path: Path) -> tuple[str, int]:
@@ -123,6 +137,7 @@ def _extract_pptx_text(path: Path) -> tuple[str, int]:
                             slide_text.append(t)
             if slide_text:
                 chunks.append(f"[Slide {n_slides}]\n" + "\n".join(slide_text))
+        del prs
         return "\n\n".join(chunks), n_slides
     except Exception as e:
         print(f"[public-data] pptx extract failed for {path.name}: {e}", flush=True)
@@ -151,7 +166,14 @@ def _chunk_text(text: str, chunk_chars: int = 1500, overlap: int = 150):
 
 
 def index_public_dataset():
-    """Idempotent: index the real NextFlex papers + funded assets."""
+    """Idempotent: index the real NextFlex papers + funded assets.
+
+    Stream-processes one file at a time and commits chunks immediately to
+    keep peak memory under Render's 512 MB free-tier cap. Without this,
+    accumulating 47 extracted PDFs in memory pushed peak RSS over 537 MB.
+    """
+    import gc
+
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     conn.executescript(PUBLIC_SCHEMA)
@@ -165,7 +187,32 @@ def index_public_dataset():
         conn.close()
         return existing
 
-    chunk_rows = []  # (id, project_id, section, page, text, classification)
+    def _commit_chunks_for(asset_id: str, full_text: str, section: str):
+        """Insert this asset's chunks immediately, then drop them from memory."""
+        if not full_text:
+            return 0
+        rows = []
+        for ci, ct in enumerate(_chunk_text(full_text)):
+            rows.append((
+                f"{asset_id}-c{ci:03d}", asset_id, section, ci + 1,
+                ct, "public_dataset",
+            ))
+        if rows:
+            conn.executemany(
+                "INSERT OR IGNORE INTO chunks "
+                "(id, project_id, section, page, text, classification) "
+                "VALUES (?, ?, ?, ?, ?, ?)",
+                rows,
+            )
+            conn.executemany(
+                "INSERT OR IGNORE INTO chunks_fts (id, text, project_id, section) "
+                "VALUES (?, ?, ?, ?)",
+                [(r[0], r[4], r[1], r[2]) for r in rows],
+            )
+            conn.commit()
+        return len(rows)
+
+    total_chunks = 0
 
     # ─── Papers ────────────────────────────────────────────────
     papers_manifest = PAPERS_DIR / "manifest.csv"
@@ -185,14 +232,12 @@ def index_public_dataset():
                 agreements = (row.get("agreements") or "").strip()
                 ack_excerpt = (row.get("ack_or_funding_excerpt") or "").strip()
 
-                # Extract PDF text if file present
                 full_text = ""
                 pages = 0
                 if local_path and local_path.exists():
                     full_text, pages = _extract_pdf_text(local_path)
 
                 abstract = (full_text[:600] if full_text else ack_excerpt[:600]).strip()
-
                 aid = _safe_id("paper", filename or title)
                 inferred_pc = _infer_project_call(full_text or ack_excerpt)
 
@@ -212,13 +257,10 @@ def index_public_dataset():
                 )
                 n_papers += 1
 
-                # Chunk paper text for GraphRAG
-                if full_text:
-                    for ci, ct in enumerate(_chunk_text(full_text)):
-                        chunk_rows.append((
-                            f"{aid}-c{ci:03d}", aid, "public:paper",
-                            ci + 1, ct, "public_dataset",
-                        ))
+                # Commit chunks immediately, then free the buffer
+                total_chunks += _commit_chunks_for(aid, full_text, "public:paper")
+                full_text = None
+                gc.collect()
         print(f"[public-data] {n_papers} papers indexed", flush=True)
 
     # ─── Funded assets ─────────────────────────────────────────
@@ -257,7 +299,6 @@ def index_public_dataset():
                         full_text, pages = _extract_pptx_text(local_path)
 
                 abstract = (full_text[:600] if full_text else evidence[:600]).strip()
-
                 aid = _safe_id(category or "asset", Path(rel_path).name or title)
                 inferred_pc = _infer_project_call(full_text)
 
@@ -277,32 +318,13 @@ def index_public_dataset():
                 )
                 n_assets += 1
 
-                # Chunk asset text
-                if full_text:
-                    for ci, ct in enumerate(_chunk_text(full_text)):
-                        chunk_rows.append((
-                            f"{aid}-c{ci:03d}", aid, f"public:{category}",
-                            ci + 1, ct, "public_dataset",
-                        ))
+                # Commit chunks immediately, then free the buffer
+                total_chunks += _commit_chunks_for(aid, full_text, f"public:{category}")
+                full_text = None
+                gc.collect()
         print(f"[public-data] {n_assets} funded assets indexed", flush=True)
 
-    # ─── Insert all chunks into the same chunks table used by GraphRAG ─
-    if chunk_rows:
-        # Use INSERT OR IGNORE in case re-indexing
-        conn.executemany(
-            "INSERT OR IGNORE INTO chunks "
-            "(id, project_id, section, page, text, classification) "
-            "VALUES (?, ?, ?, ?, ?, ?)",
-            chunk_rows,
-        )
-        # Mirror into chunks_fts
-        conn.executemany(
-            "INSERT OR IGNORE INTO chunks_fts (id, text, project_id, section) "
-            "VALUES (?, ?, ?, ?)",
-            [(r[0], r[4], r[1], r[2]) for r in chunk_rows],
-        )
-        print(f"[public-data] {len(chunk_rows)} text chunks indexed for GraphRAG",
-              flush=True)
+    print(f"[public-data] {total_chunks} text chunks indexed for GraphRAG", flush=True)
 
     # ─── Build assets FTS ──────────────────────────────────────
     rows = conn.execute(
@@ -323,6 +345,7 @@ def index_public_dataset():
         "SELECT COUNT(*) FROM chunks WHERE classification='public_dataset'"
     ).fetchone()[0]
     conn.close()
+    gc.collect()
     print(f"[public-data] DONE: {total} assets, {chunks} chunks indexed",
           flush=True)
     return total
