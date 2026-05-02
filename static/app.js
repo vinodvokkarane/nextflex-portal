@@ -82,12 +82,18 @@ $$('.nav-btn').forEach((btn) => {
     $$('.nav-btn').forEach((b) => b.classList.remove('active'));
     $$('.view').forEach((v) => v.classList.remove('active'));
     btn.classList.add('active');
-    $(`#view-${btn.dataset.view}`).classList.add('active');
-    if (btn.dataset.view === 'projects' && !$('#filterPC').dataset.loaded) {
+    const v = btn.dataset.view;
+    if (!v) return;
+    const target = $(`#view-${v}`);
+    if (target) target.classList.add('active');
+    if (v === 'projects' && !$('#filterPC').dataset.loaded) {
       populateFilters();
     }
-    if (btn.dataset.view === 'institutions') {
+    if (v === 'institutions') {
       loadInstitutions();
+    }
+    if (v === 'public') {
+      initPublicDataset();
     }
   });
 });
@@ -378,6 +384,167 @@ function filterByPEO(peo) {
       renderProjectList('#_drilldown_list', d.results);
     });
 }
+// ═══ PUBLIC NEXTFLEX DATASET ═══
+
+let _pubInitDone = false;
+async function initPublicDataset() {
+  if (_pubInitDone) return;
+  _pubInitDone = true;
+  try {
+    const stats = await fetch('/api/public-dataset/stats', {credentials: 'same-origin'}).then(r => r.json());
+    const pubByCat = {};
+    (stats.by_category || []).forEach(c => { pubByCat[c.category] = c.n; });
+    $('#pubTotal').textContent = stats.total_assets;
+    $('#pubFiles').textContent = stats.with_local_files + ' / ' + stats.total_assets;
+    $('#pubPapers').textContent = pubByCat.paper || 0;
+    $('#pubPatents').textContent = pubByCat.patent || 0;
+    $('#pubWebinars').textContent = pubByCat.webinar || 0;
+
+    // Populate years dropdown
+    const yearSel = $('#pubFilterYear');
+    yearSel.innerHTML = '<option value="">All years</option>';
+    (stats.by_year || []).slice().reverse().forEach(y => {
+      const opt = document.createElement('option');
+      opt.value = y.year; opt.textContent = `${y.year} (${y.n})`;
+      yearSel.appendChild(opt);
+    });
+  } catch (e) {
+    console.error('Public dataset stats failed', e);
+  }
+  loadPublicAssets();
+}
+
+function filterPubBy(category) {
+  // Switch to public view if not already
+  $('.nav-btn[data-view="public"]').click();
+  setTimeout(() => {
+    $('#pubFilterCat').value = category || '';
+    $('#pubFilterYear').value = '';
+    $('#pubSearchInput').value = '';
+    loadPublicAssets();
+  }, 50);
+}
+
+async function loadPublicAssets() {
+  const cat = $('#pubFilterCat').value;
+  const year = $('#pubFilterYear').value;
+  const q = $('#pubSearchInput').value.trim();
+  const params = new URLSearchParams();
+  if (cat) params.append('category', cat);
+  if (year) params.append('year', year);
+  if (q) params.append('q', q);
+  params.append('limit', '200');
+
+  const list = $('#pubAssetsList');
+  list.innerHTML = '<div class="loading">Loading…</div>';
+  try {
+    const data = await fetch(`/api/public-dataset/list?${params}`, {credentials: 'same-origin'}).then(r => r.json());
+    if (!data.results || !data.results.length) {
+      list.innerHTML = '<div class="empty-state">No assets match these filters.</div>';
+      return;
+    }
+    list.innerHTML = data.results.map(renderAssetCard).join('');
+  } catch (e) {
+    list.innerHTML = `<div class="empty-state">Error: ${e.message}</div>`;
+  }
+}
+
+function renderAssetCard(a) {
+  const iconLetter = {paper:'PAP', patent:'PAT', webinar:'WBN', project_report:'RPT', pptx:'PPT'}[a.category] || 'DOC';
+  const sizeStr = a.file_size_bytes ? ` · ${(a.file_size_bytes/1024/1024).toFixed(1)} MB` : '';
+  const pagesStr = a.pages ? ` · ${a.pages} pages` : '';
+  const yearStr = a.year ? `${a.year}` : '—';
+  const pcStr = a.project_call ? ` · ${escapeHtml(a.project_call)}` : '';
+  return `
+    <div class="asset-card" onclick="openAssetModal('${a.id}')">
+      <div class="asset-icon ${a.category}">${iconLetter}</div>
+      <div class="asset-meta">
+        <div style="display:flex; gap:6px; margin-bottom:4px; align-items:center; flex-wrap:wrap">
+          <span class="asset-tag cat-${a.category}">${a.category.toUpperCase()}</span>
+          <span style="font-size:10px; color:var(--muted); font-family:'JetBrains Mono', monospace">${yearStr}${pcStr}</span>
+        </div>
+        <div class="asset-title">${escapeHtml(a.title)}</div>
+        <div class="asset-detail">
+          ${a.agreement_numbers ? `<span>📋 ${escapeHtml(a.agreement_numbers)}</span>` : ''}
+          <span>${pagesStr}${sizeStr}</span>
+        </div>
+      </div>
+      <div class="asset-action ${a.has_local_file ? '' : 'disabled'}">${a.has_local_file ? 'View →' : 'External →'}</div>
+    </div>
+  `;
+}
+
+async function openAssetModal(id) {
+  try {
+    const a = await fetch(`/api/public-dataset/${encodeURIComponent(id)}`, {credentials: 'same-origin'}).then(r => r.json());
+    const body = $('#modalBody');
+    const downloadCard = a.has_local_file && a.download_url ? `
+      <div class="modal-section">
+        <h3>Download</h3>
+        <div class="files-strip">
+          <a href="${a.download_url}" target="_blank" class="file-card">
+            <div class="file-icon ${a.file_path && a.file_path.endsWith('.pptx') ? 'pptx' : 'pdf'}">
+              ${a.file_path && a.file_path.endsWith('.pptx') ? 'PPT' : 'PDF'}
+            </div>
+            <div class="file-meta">
+              <div class="file-name">${escapeHtml(a.file_path.split('/').pop())}</div>
+              <div class="file-desc">${(a.file_size_bytes/1024/1024).toFixed(1)} MB · ${a.pages || '?'} pages · ${a.full_text_chars.toLocaleString()} chars indexed</div>
+            </div>
+            <div class="file-action">Open ↗</div>
+          </a>
+        </div>
+      </div>
+    ` : `
+      <div class="modal-section">
+        <h3>Source</h3>
+        <p style="color:var(--muted); font-size:13px">${a.source_url ? `External: <a href="${escapeHtml(a.source_url)}" target="_blank" style="color:var(--teal)">${escapeHtml(a.source_url.slice(0,80))}</a>` : 'Manifest-only entry, no local file.'}</p>
+      </div>
+    `;
+    body.innerHTML = `
+      <div class="modal-pc-tag" style="background:rgba(10,143,143,.12); color:var(--teal); display:inline-block; padding:3px 10px; border-radius:6px; font-size:10px; font-weight:700; font-family:'JetBrains Mono', monospace; margin-bottom:10px">
+        ${a.category.toUpperCase()} · ${a.year || 'n.d.'}${a.project_call ? ' · ' + escapeHtml(a.project_call) : ''}
+      </div>
+      <h2 style="margin:0 0 12px 0; font-size:20px; line-height:1.3">${escapeHtml(a.title)}</h2>
+
+      <div class="modal-section">
+        <h3>Metadata</h3>
+        <div class="modal-meta-grid">
+          ${a.agreement_numbers ? `<div><div class="meta-label">Agreement</div><div class="meta-val">${escapeHtml(a.agreement_numbers)}</div></div>` : ''}
+          <div><div class="meta-label">Pages</div><div class="meta-val">${a.pages || '—'}</div></div>
+          <div><div class="meta-label">Indexed chunks</div><div class="meta-val">${a.indexed_chunks}</div></div>
+          ${a.public_access ? `<div><div class="meta-label">Access</div><div class="meta-val">${escapeHtml(a.public_access)}</div></div>` : ''}
+        </div>
+      </div>
+
+      ${a.funding_acknowledgment ? `<div class="modal-section">
+        <h3>Funding acknowledgment / evidence</h3>
+        <div style="font-size:12px; color:var(--text); line-height:1.6; padding:12px 14px; background:var(--bg); border-radius:8px; border:1px solid var(--border); font-style:italic">"${escapeHtml(a.funding_acknowledgment.slice(0, 600))}${a.funding_acknowledgment.length > 600 ? '...' : ''}"</div>
+      </div>` : ''}
+
+      ${a.abstract ? `<div class="modal-section">
+        <h3>Abstract / opening text</h3>
+        <div style="font-size:13px; line-height:1.6; padding:12px 14px; background:var(--bg); border-radius:8px; border:1px solid var(--border)">${escapeHtml(a.abstract.slice(0, 600))}${a.abstract.length > 600 ? '…' : ''}</div>
+      </div>` : ''}
+
+      ${downloadCard}
+
+      <div class="modal-section">
+        <p style="font-size:11px; color:var(--muted); margin-top:14px">
+          ✓ This document's full text is indexed in the GraphRAG corpus. Try queries like
+          <em>"${escapeHtml(a.title.split(' ').slice(0, 4).join(' ') + '"')}</em> in the manager dashboard query bar.
+        </p>
+      </div>
+    `;
+    $('#modal').classList.remove('hidden');
+  } catch (e) {
+    alert('Could not load asset: ' + e.message);
+  }
+}
+
+window.filterPubBy = filterPubBy;
+window.loadPublicAssets = loadPublicAssets;
+window.openAssetModal = openAssetModal;
+
 // Expose to global so manager dashboard inline handlers can navigate via parent window when needed
 window.filterByDistrict = filterByDistrict;
 window.filterByPEO = filterByPEO;

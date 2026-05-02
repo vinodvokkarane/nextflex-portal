@@ -52,8 +52,18 @@ def ensure_synthetic_file_chunks():
         print(f"[startup] WARNING: synthetic file chunk indexing failed: {e}", flush=True)
 
 
+def ensure_public_dataset():
+    """Index real NextFlex papers + funded assets at startup."""
+    try:
+        from public_dataset import index_public_dataset
+        index_public_dataset()
+    except Exception as e:
+        print(f"[startup] WARNING: public dataset indexing failed: {e}", flush=True)
+
+
 ensure_db()
 ensure_synthetic_file_chunks()
+ensure_public_dataset()
 
 app = FastAPI(title="NextFlex Project Portal", version="2.0.0")
 app.add_middleware(
@@ -498,41 +508,64 @@ class GraphRAGRequest(BaseModel):
 
 
 def retrieve_chunks(conn, question: str, classifications: list, top_k: int = 6):
-    """Hybrid retrieval: pull top-ranked chunks across narrative + PDF + PPTX
-    so GraphRAG responses cite a diversity of sources (per-source-type top-k/3)."""
+    """Hybrid retrieval: pull top-ranked chunks across narrative + synthetic
+    PDF/PPTX + real public dataset chunks so GraphRAG responses cite a
+    diversity of sources."""
     tokens = re.findall(r"[A-Za-z0-9]+", question)
     if not tokens:
         return []
     fts_query = " OR ".join(f'"{t}"' for t in tokens)
     cph = ",".join("?" * len(classifications))
 
+    # Public-dataset chunks have classification='public_dataset' which isn't
+    # in any persona's whitelist. Add it so all roles can see public papers.
+    full_classifications = list(classifications) + ["public_dataset"]
+    full_cph = ",".join("?" * len(full_classifications))
+
     def fetch(section_clause, k):
+        # LEFT JOIN both projects and public_assets, COALESCE the metadata
         sql = f"""
             SELECT c.id, c.text, c.section, c.page, c.project_id, c.classification,
-                   p.title AS project_title, p.project_call, p.lead_institution,
-                   p.focus_area, p.congressional_district
-            FROM chunks_fts fts JOIN chunks c ON c.id = fts.id
-            JOIN projects p ON p.id = c.project_id
-            WHERE chunks_fts MATCH ? AND p.classification IN ({cph}) {section_clause}
+                   COALESCE(p.title, pa.title) AS project_title,
+                   COALESCE(p.project_call, pa.project_call) AS project_call,
+                   COALESCE(p.lead_institution, pa.category) AS lead_institution,
+                   COALESCE(p.focus_area, pa.subtype) AS focus_area,
+                   COALESCE(p.congressional_district, '') AS congressional_district
+            FROM chunks_fts fts
+            JOIN chunks c ON c.id = fts.id
+            LEFT JOIN projects p ON p.id = c.project_id
+            LEFT JOIN public_assets pa ON pa.id = c.project_id
+            WHERE chunks_fts MATCH ?
+              AND (p.classification IN ({cph}) OR pa.id IS NOT NULL)
+              AND c.classification IN ({full_cph})
+              {section_clause}
             ORDER BY rank LIMIT ?
         """
-        return conn.execute(sql, [fts_query] + classifications + [k]).fetchall()
+        params = [fts_query] + classifications + full_classifications + [k]
+        return conn.execute(sql, params).fetchall()
 
-    # Roughly 1/3 from each source type, but allow filling from any if a type is empty
-    third = max(1, top_k // 3)
-    pdf_rows = fetch("AND c.section LIKE 'pdf:%'", third)
-    pptx_rows = fetch("AND c.section LIKE 'pptx:%'", third)
-    narr_rows = fetch("AND c.section NOT LIKE 'pdf:%' AND c.section NOT LIKE 'pptx:%'",
-                      top_k - len(pdf_rows) - len(pptx_rows))
+    # Diversify across four buckets: synthetic PDF, synthetic PPTX, real public, narrative
+    quarter = max(1, top_k // 4)
+    pdf_rows = fetch("AND c.section LIKE 'pdf:%'", quarter)
+    pptx_rows = fetch("AND c.section LIKE 'pptx:%'", quarter)
+    public_rows = fetch("AND c.section LIKE 'public:%'", quarter)
+    narr_rows = fetch(
+        "AND c.section NOT LIKE 'pdf:%' AND c.section NOT LIKE 'pptx:%' "
+        "AND c.section NOT LIKE 'public:%'",
+        max(1, top_k - len(pdf_rows) - len(pptx_rows) - len(public_rows)),
+    )
 
-    # If diversified set is short of top_k, top up with overall best matches
-    seen_ids = {r["id"] for r in (pdf_rows + pptx_rows + narr_rows)}
-    combined = list(pdf_rows) + list(pptx_rows) + list(narr_rows)
+    seen_ids = set()
+    combined = []
+    for batch in (pdf_rows, pptx_rows, public_rows, narr_rows):
+        for r in batch:
+            if r["id"] not in seen_ids:
+                combined.append(r); seen_ids.add(r["id"])
+
     if len(combined) < top_k:
         for extra in fetch("", top_k * 2):
             if extra["id"] not in seen_ids:
-                combined.append(extra)
-                seen_ids.add(extra["id"])
+                combined.append(extra); seen_ids.add(extra["id"])
                 if len(combined) >= top_k:
                     break
 
@@ -637,26 +670,170 @@ def graphrag(req: GraphRAGRequest, request: Request):
          "project_title": c["project_title"], "project_call": c["project_call"],
          "lead_institution": c["lead_institution"], "focus_area": c["focus_area"],
          "section": c["section"], "page": c["page"],
-         "source_type": ("pdf" if c["section"].startswith("pdf:")
-                         else ("pptx" if c["section"].startswith("pptx:")
-                               else "narrative")),
+         "source_type": (
+             "public" if c["section"].startswith("public:")
+             else "pdf" if c["section"].startswith("pdf:")
+             else "pptx" if c["section"].startswith("pptx:")
+             else "narrative"
+         ),
          "snippet": c["text"][:280] + ("..." if len(c["text"]) > 280 else "")}
         for i, c in enumerate(chunks)
     ]
-    # Tally file source coverage for the response
     pdf_count = sum(1 for c in citations if c["source_type"] == "pdf")
     pptx_count = sum(1 for c in citations if c["source_type"] == "pptx")
+    public_count = sum(1 for c in citations if c["source_type"] == "public")
+    narrative_count = len(citations) - pdf_count - pptx_count - public_count
     return {
         "question": req.question, "answer": answer, "mode": mode,
         "citations": citations, "graph_entities": graph_ctx,
         "source_breakdown": {
             "pdf": pdf_count, "pptx": pptx_count,
-            "narrative": len(citations) - pdf_count - pptx_count,
+            "public": public_count, "narrative": narrative_count,
         },
     }
 
 
-# ────────── Static assets ──────────
+# ────────── Public NextFlex Dataset ──────────
+
+PUBLIC_DATA_ROOT = Path(__file__).parent / "public_data"
+
+
+@app.get("/api/public-dataset/stats")
+def public_dataset_stats(request: Request):
+    """Counts grouped by category for the real NextFlex dataset."""
+    with db() as conn:
+        total = conn.execute("SELECT COUNT(*) FROM public_assets").fetchone()[0]
+        with_files = conn.execute(
+            "SELECT COUNT(*) FROM public_assets WHERE has_local_file=1"
+        ).fetchone()[0]
+        size = conn.execute(
+            "SELECT SUM(file_size_bytes) FROM public_assets WHERE has_local_file=1"
+        ).fetchone()[0] or 0
+        chunks = conn.execute(
+            "SELECT COUNT(*) FROM chunks WHERE classification='public_dataset'"
+        ).fetchone()[0]
+        by_cat = conn.execute("""
+            SELECT category, COUNT(*) AS n,
+                   SUM(has_local_file) AS with_files,
+                   COALESCE(SUM(file_size_bytes), 0) AS size
+            FROM public_assets GROUP BY category ORDER BY n DESC
+        """).fetchall()
+        by_year = conn.execute("""
+            SELECT year, COUNT(*) AS n FROM public_assets
+            WHERE year IS NOT NULL GROUP BY year ORDER BY year
+        """).fetchall()
+        agreements = conn.execute("""
+            SELECT agreement_numbers, COUNT(*) AS n FROM public_assets
+            WHERE agreement_numbers IS NOT NULL AND agreement_numbers != ''
+            GROUP BY agreement_numbers ORDER BY n DESC LIMIT 20
+        """).fetchall()
+    return {
+        "total_assets": total,
+        "with_local_files": with_files,
+        "manifest_only": total - with_files,
+        "total_size_bytes": size,
+        "indexed_chunks": chunks,
+        "by_category": [dict(r) for r in by_cat],
+        "by_year": [dict(r) for r in by_year],
+        "agreements": [dict(r) for r in agreements],
+    }
+
+
+@app.get("/api/public-dataset/list")
+def public_dataset_list(
+    request: Request,
+    category: Optional[str] = None,
+    year: Optional[int] = None,
+    pc: Optional[str] = None,
+    q: Optional[str] = None,
+    limit: int = Query(200, ge=1, le=500),
+    offset: int = Query(0, ge=0),
+):
+    """List public dataset assets with optional filters and FTS search."""
+    with db() as conn:
+        if q:
+            tokens = re.findall(r"[A-Za-z0-9]+", q)
+            if not tokens:
+                return {"count": 0, "results": []}
+            fts_query = " ".join(f'"{t}"' for t in tokens)
+            sql = """
+                SELECT a.* FROM public_assets a
+                JOIN public_assets_fts fts ON a.id = fts.id
+                WHERE public_assets_fts MATCH ?
+            """
+            params = [fts_query]
+            order = " ORDER BY rank"
+        else:
+            sql = "SELECT * FROM public_assets WHERE 1=1"
+            params = []
+            order = " ORDER BY year DESC, title"
+
+        if category:
+            sql += " AND category = ?"; params.append(category)
+        if year:
+            sql += " AND year = ?"; params.append(year)
+        if pc:
+            sql += " AND project_call = ?"; params.append(pc)
+
+        sql += order + " LIMIT ? OFFSET ?"
+        params.extend([limit, offset])
+        rows = conn.execute(sql, params).fetchall()
+    return {
+        "count": len(rows),
+        "limit": limit, "offset": offset,
+        "results": [dict(r) for r in rows],
+    }
+
+
+@app.get("/api/public-dataset/{asset_id}")
+def public_dataset_detail(asset_id: str, request: Request):
+    """Get metadata for one public asset."""
+    with db() as conn:
+        row = conn.execute(
+            "SELECT * FROM public_assets WHERE id = ?", (asset_id,)
+        ).fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="not_found")
+    asset = dict(row)
+    # Add chunk count and file URL
+    with db() as conn:
+        n_chunks = conn.execute(
+            "SELECT COUNT(*) FROM chunks WHERE project_id = ?",
+            (asset_id,)
+        ).fetchone()[0]
+    asset["indexed_chunks"] = n_chunks
+    if asset.get("has_local_file"):
+        asset["download_url"] = f"/api/public-dataset/{asset_id}/download"
+    return asset
+
+
+@app.get("/api/public-dataset/{asset_id}/download")
+def public_dataset_download(asset_id: str, request: Request):
+    """Stream the real PDF or PPTX file."""
+    with db() as conn:
+        row = conn.execute(
+            "SELECT file_path, has_local_file, title FROM public_assets WHERE id = ?",
+            (asset_id,)
+        ).fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="not_found")
+    if not row["has_local_file"] or not row["file_path"]:
+        raise HTTPException(status_code=404, detail="file_not_available")
+
+    file_path = PUBLIC_DATA_ROOT / row["file_path"]
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="file_missing_on_disk")
+
+    ext = file_path.suffix.lower()
+    media_type = {
+        ".pdf": "application/pdf",
+        ".pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    }.get(ext, "application/octet-stream")
+
+    return FileResponse(file_path, media_type=media_type, filename=file_path.name)
+
+
+# ────────── Static assets (mount last) ──────────
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 

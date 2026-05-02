@@ -9,3 +9,6 @@ venv/
 
 # Generated DB - regenerate with init_db.py
 nextflex.db
+
+nextflex-portal-v*.tar.gz
+*.tar.gz

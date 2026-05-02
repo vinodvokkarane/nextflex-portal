@@ -23,6 +23,7 @@
       <button class="nav-btn active" data-view="dashboard">Dashboard</button>
       <button class="nav-btn" data-view="projects">Projects</button>
       <button class="nav-btn" data-view="institutions">Institutions</button>
+      <button class="nav-btn" data-view="public">Public Dataset</button>
       <button class="nav-btn" data-view="search">Search</button>
       <a class="nav-btn manager-link" href="/manager" title="Open the Secure AI/ML Program Manager dashboard">
         ★ Manager Dashboard
@@ -119,6 +120,68 @@
         </thead>
         <tbody></tbody>
       </table>
+    </div>
+  </section>
+
+  <!-- ─── PUBLIC NEXTFLEX DATASET VIEW ─── -->
+  <section id="view-public" class="view">
+    <div class="pub-header">
+      <div>
+        <h2 style="margin:0 0 4px 0; font-size:22px; letter-spacing:-.02em">Public NextFlex Dataset</h2>
+        <p style="margin:0; color:var(--muted); font-size:13px">
+          Real NextFlex-acknowledged academic papers, patents, project reports, webinars, and PPTX templates —
+          indexed and queryable through the same GraphRAG interface.
+        </p>
+      </div>
+      <span class="pub-badge">Real data · publicly sourced</span>
+    </div>
+
+    <div class="stat-grid" id="pubStatGrid">
+      <div class="stat-card clickable" onclick="filterPubBy()" title="Browse all assets">
+        <div class="stat-label">Total assets</div>
+        <div class="stat-value" id="pubTotal">—</div>
+        <div class="stat-hint">Click to browse →</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Local files</div>
+        <div class="stat-value" id="pubFiles">—</div>
+        <div class="stat-hint" style="opacity:.5">PDFs + PPTXs on disk</div>
+      </div>
+      <div class="stat-card clickable" onclick="filterPubBy('paper')" title="Academic papers">
+        <div class="stat-label">Papers</div>
+        <div class="stat-value" id="pubPapers">—</div>
+        <div class="stat-hint">Click to browse →</div>
+      </div>
+      <div class="stat-card clickable" onclick="filterPubBy('patent')" title="Patents">
+        <div class="stat-label">Patents</div>
+        <div class="stat-value" id="pubPatents">—</div>
+        <div class="stat-hint">Click to browse →</div>
+      </div>
+      <div class="stat-card clickable" onclick="filterPubBy('webinar')" title="Webinars + Proposers Days">
+        <div class="stat-label">Webinars</div>
+        <div class="stat-value" id="pubWebinars">—</div>
+        <div class="stat-hint">Click to browse →</div>
+      </div>
+    </div>
+
+    <div class="filter-bar" style="margin-top:16px">
+      <select id="pubFilterCat">
+        <option value="">All categories</option>
+        <option value="paper">Papers</option>
+        <option value="patent">Patents</option>
+        <option value="webinar">Webinars / Proposers Days</option>
+        <option value="project_report">Project Reports</option>
+        <option value="pptx">PPTX Templates</option>
+      </select>
+      <select id="pubFilterYear">
+        <option value="">All years</option>
+      </select>
+      <input type="text" id="pubSearchInput" placeholder='Full-text search (e.g. "aerosol jet polyimide")' style="flex:1; min-width:240px; padding:9px 12px; border:1px solid var(--border); border-radius:8px; font-family:inherit; font-size:13px; background:var(--bg); color:var(--text)" />
+      <button class="btn-primary" onclick="loadPublicAssets()">Apply</button>
+    </div>
+
+    <div id="pubAssetsList" class="projects-list" style="margin-top:16px">
+      <div class="empty-state">Loading public dataset…</div>
     </div>
   </section>
 
