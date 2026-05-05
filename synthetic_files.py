@@ -420,7 +420,7 @@ def generate_pptx(project: dict, materials: list, processes: list,
 
     # Slide 7: Transition pathway
     s = prs.slides.add_slide(blank)
-    add_title_bar(s, "Transition Pathway", "Commercialization & DoD acquisition")
+    add_title_bar(s, "Transition Pathway", "Commercialization & DoW acquisition")
     pathway = [
         f"Industry partners: {', '.join(project.get('industry_partners', [])) or 'TBD'}",
         f"PEO alignment: {project.get('peo') or 'TBD'}",

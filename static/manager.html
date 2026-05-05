@@ -387,30 +387,69 @@ a{color:var(--teal);text-decoration:none}
 /* Hide everything role-tagged until JS sets the body role from /api/auth/whoami */
 [data-roles]{display:none !important}
 body[data-role="admin"] [data-roles~="admin"]{display:revert !important}
-body[data-role="dod"] [data-roles~="dod"]{display:revert !important}
+body[data-role="dow"] [data-roles~="dow"]{display:revert !important}
 body[data-role="member"] [data-roles~="member"]{display:revert !important}
 
 /* Re-establish flex/grid for elements that need it */
 body[data-role="admin"] .grid-stats[data-roles~="admin"],
-body[data-role="dod"] .grid-stats[data-roles~="dod"],
+body[data-role="dow"] .grid-stats[data-roles~="dow"],
 body[data-role="member"] .grid-stats[data-roles~="member"]{display:grid !important}
 body[data-role="admin"] .trl-strip[data-roles~="admin"],
-body[data-role="dod"] .trl-strip[data-roles~="dod"]{display:grid !important}
+body[data-role="dow"] .trl-strip[data-roles~="dow"]{display:grid !important}
 body[data-role="admin"] .grid2[data-roles~="admin"],
-body[data-role="dod"] .grid2[data-roles~="dod"],
+body[data-role="dow"] .grid2[data-roles~="dow"],
 body[data-role="member"] .grid2[data-roles~="member"]{display:grid !important}
 body[data-role="admin"] .grid2.equal[data-roles~="admin"]{display:grid !important}
 
 /* When right-stack hides for non-admin, let KG explorer take full width */
-body[data-role="dod"] .kg-grid,
+body[data-role="dow"] .kg-grid,
 body[data-role="member"] .kg-grid{grid-template-columns:1fr}
 
 /* Role-pill identifier shown next to user persona */
 .role-tag{display:inline-flex;align-items:center;gap:5px;font-size:10px;padding:3px 9px;border-radius:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-top:4px}
 .role-tag.admin{background:rgba(99,102,241,.25);color:#c7d2fe;border:1px solid rgba(99,102,241,.3)}
-.role-tag.dod{background:rgba(217,119,6,.3);color:#fbbf24;border:1px solid rgba(217,119,6,.3)}
+.role-tag.dow{background:rgba(217,119,6,.3);color:#fbbf24;border:1px solid rgba(217,119,6,.3)}
 .role-tag.member{background:rgba(5,150,105,.3);color:#6ee7b7;border:1px solid rgba(5,150,105,.3)}
 
+/* ─── DESIGN WIZARD ─── */
+.wizard-tab-btn{background:linear-gradient(135deg,rgba(234,88,12,.15),rgba(234,88,12,.05))!important;color:#ea580c!important;border:1px solid rgba(234,88,12,.3)!important;font-weight:700!important}
+.wizard-tab-btn:hover{background:linear-gradient(135deg,rgba(234,88,12,.25),rgba(234,88,12,.1))!important}
+.wiz-step{display:flex;align-items:center;gap:10px;flex:1;padding:8px 12px;border-radius:10px;cursor:pointer;transition:all .2s;opacity:.4}
+.wiz-step.active{opacity:1;background:rgba(10,143,143,.08)}
+.wiz-step.done{opacity:.7;background:rgba(5,150,105,.06)}
+.wiz-step-num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;font-family:'JetBrains Mono',monospace;background:var(--border);color:var(--text);flex-shrink:0;transition:all .2s}
+.wiz-step.active .wiz-step-num{background:var(--teal);color:#fff}
+.wiz-step.done .wiz-step-num{background:var(--green);color:#fff}
+.wiz-step-label{font-size:13px;font-weight:700}
+.wiz-step-desc{font-size:10px;color:var(--muted)}
+.wiz-arrow{color:var(--muted);font-size:16px;padding:0 4px;opacity:.3}
+.wiz-group{margin-bottom:18px}
+.wiz-group-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.wiz-options{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px}
+.wiz-opt{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;cursor:pointer;transition:all .15s;font-size:12px}
+.wiz-opt:hover{border-color:var(--teal);transform:translateY(-1px);box-shadow:0 4px 12px rgba(10,143,143,.08)}
+.wiz-opt.selected{border-color:var(--teal);background:rgba(10,143,143,.06);box-shadow:0 0 0 2px rgba(10,143,143,.15)}
+.wiz-opt .wiz-check{width:18px;height:18px;border:2px solid var(--border);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:11px;color:transparent;flex-shrink:0;transition:all .15s}
+.wiz-opt.selected .wiz-check{border-color:var(--teal);background:var(--teal);color:#fff}
+.wiz-opt-info{flex:1;min-width:0}
+.wiz-opt-name{font-weight:600;font-size:12px;margin-bottom:1px}
+.wiz-opt-detail{font-size:10px;color:var(--muted)}
+.btn.wiz-next{background:linear-gradient(135deg,var(--teal),#0d7377);color:#fff;padding:10px 22px;border-radius:8px;border:none;font-weight:600;font-size:13px;cursor:pointer;transition:all .15s}
+.btn.wiz-next:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(10,143,143,.2)}
+.btn.wiz-back{background:transparent;color:var(--muted);padding:10px 22px;border-radius:8px;border:1px solid var(--border);font-weight:600;font-size:13px;cursor:pointer}
+.btn.wiz-back:hover{border-color:var(--teal);color:var(--teal)}
+.wiz-template{padding:10px 16px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;font-size:12px;transition:all .15s;background:var(--bg)}
+.wiz-template:hover{border-color:#ea580c;background:rgba(234,88,12,.04);transform:translateY(-1px)}
+.wiz-template .wt-name{font-weight:700;margin-bottom:2px;color:var(--text)}
+.wiz-template .wt-desc{font-size:10px;color:var(--muted)}
+.wiz-perf-card{padding:14px;background:var(--bg);border:1px solid var(--border);border-radius:10px}
+.wiz-perf-card .wpc-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:4px}
+.wiz-perf-card .wpc-value{font-size:18px;font-weight:700;color:var(--teal);font-family:'JetBrains Mono',monospace}
+.wiz-perf-card .wpc-range{font-size:10px;color:var(--muted);margin-top:2px}
+.wiz-rel-card{padding:10px 14px;background:var(--bg);border:1px solid var(--border);border-radius:8px;text-align:center}
+.wiz-rel-card .wrc-icon{font-size:18px;margin-bottom:4px}
+.wiz-rel-card .wrc-name{font-size:11px;font-weight:600;margin-bottom:2px}
+.wiz-rel-card .wrc-detail{font-size:10px;color:var(--muted)}
 </style>
 </head>
 <body data-role="">
@@ -431,8 +470,8 @@ body[data-role="member"] .kg-grid{grid-template-columns:1fr}
       <div class="team-strip">
         <span class="team-chip">UMass Lowell (Prime)</span>
         <span class="team-chip">Raytheon (RURI)</span>
-        <span class="team-chip">Northrop Grumman</span>
-        <span class="team-chip">ARL (DoD)</span>
+        <span class="team-chip">Natick Soldier Center</span>
+        <span class="team-chip">ARL (DoW)</span>
       </div>
     </div>
   </div>
@@ -472,21 +511,22 @@ body[data-role="member"] .kg-grid{grid-template-columns:1fr}
 
 <!-- ═══ NAV ═══ -->
 <div class="nav">
-  <button class="active" data-tab="dashboard" data-roles="admin dod member">Dashboard</button>
-  <button data-tab="graph" data-roles="admin dod member">Knowledge graph</button>
+  <button class="active" data-tab="dashboard" data-roles="admin dow member">Dashboard</button>
+  <button data-tab="graph" data-roles="admin dow member">Knowledge graph</button>
   <button data-tab="ingestion" data-roles="admin member">Report ingestion</button>
-  <button data-tab="materials" data-roles="admin dod member">Materials DB</button>
+  <button data-tab="materials" data-roles="admin dow member">Materials DB</button>
+  <button data-tab="wizard" data-roles="dow admin" class="wizard-tab-btn">⚡ Design Wizard</button>
   <button data-tab="geo" data-roles="admin">Geo &amp; districts</button>
-  <button data-tab="commercial" data-roles="admin dod">Commercial deploy</button>
-  <button data-tab="peo" data-roles="admin dod">DoD PEO</button>
+  <button data-tab="commercial" data-roles="admin dow">Commercial deploy</button>
+  <button data-tab="peo" data-roles="admin dow">DoW PEO</button>
   <button data-tab="access" data-roles="admin">Access control</button>
-  <button data-tab="reliability" data-roles="admin dod member">Reliability</button>
-  <button data-tab="audit" data-roles="admin dod">Audit log</button>
+  <button data-tab="reliability" data-roles="admin dow member">Reliability</button>
+  <button data-tab="audit" data-roles="admin dow">Audit log</button>
   <button data-tab="techhub" data-roles="admin member">Tech Hub</button>
 </div>
 
 <!-- ═══ TRL/MRL ═══ -->
-<div class="trl-strip" data-roles="admin dod">
+<div class="trl-strip" data-roles="admin dow">
   <div class="trl-card">
     <div class="trl-label">TRL</div>
     <div style="flex:1">
@@ -534,21 +574,21 @@ body[data-role="member"] .kg-grid{grid-template-columns:1fr}
     <div class="delta up">3 in production</div>
   </div>
   <div class="stat">
-    <div class="label">DoD PEOs linked</div>
+    <div class="label">DoW PEOs linked</div>
     <div class="value" id="s7">0</div>
     <div class="delta up">Acquisition pathways mapped</div>
   </div>
 </div>
 
-<!-- ═══ STAT CARDS — DoD VIEW ═══ -->
-<div class="grid-stats" data-roles="dod">
+<!-- ═══ STAT CARDS — DoW VIEW ═══ -->
+<div class="grid-stats" data-roles="dow">
   <div class="stat">
     <div class="label">Mission-aligned entities</div>
     <div class="value" id="d1">0</div>
     <div class="delta up">RF · sensors · soldier-worn</div>
   </div>
   <div class="stat">
-    <div class="label">DoD PEOs linked</div>
+    <div class="label">DoW PEOs linked</div>
     <div class="value" id="d2">0</div>
     <div class="delta up">5 acquisition pathways</div>
   </div>
@@ -614,8 +654,8 @@ body[data-role="member"] .kg-grid{grid-template-columns:1fr}
   </div>
 </div>
 
-<!-- ═══ NL QUERY (DoD + MEMBER ONLY) — moved up for prominence ═══ -->
-<div class="query-section" data-roles="dod member">
+<!-- ═══ NL QUERY (DoW + MEMBER ONLY) — moved up for prominence ═══ -->
+<div class="query-section" data-roles="dow member">
   <h2>
     <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5.5" stroke="var(--teal)" stroke-width="1.5"/><path d="m11 11 3.5 3.5" stroke="var(--teal)" stroke-width="1.5" stroke-linecap="round"/></svg>
     GraphRAG natural language query
@@ -629,13 +669,13 @@ body[data-role="member"] .kg-grid{grid-template-columns:1fr}
     <button class="btn" onclick="runQuery()">Query</button>
   </div>
   <div class="query-examples">
-    <!-- DoD persona - mission-flavored, RF/conformal/soldier focus, all verified to hit -->
-    <button class="query-ex" data-roles="dod" onclick="setQuery(this)">X-band antenna</button>
-    <button class="query-ex" data-roles="dod" onclick="setQuery(this)">Ka-band phased array</button>
-    <button class="query-ex" data-roles="dod" onclick="setQuery(this)">5G mm-wave</button>
-    <button class="query-ex" data-roles="dod" onclick="setQuery(this)">soldier wearable</button>
-    <button class="query-ex" data-roles="dod" onclick="setQuery(this)">conformal antenna</button>
-    <button class="query-ex" data-roles="dod" onclick="setQuery(this)">phased array antennas</button>
+    <!-- DoW persona - mission-flavored, RF/conformal/soldier focus, all verified to hit -->
+    <button class="query-ex" data-roles="dow" onclick="setQuery(this)">X-band antenna</button>
+    <button class="query-ex" data-roles="dow" onclick="setQuery(this)">Ka-band phased array</button>
+    <button class="query-ex" data-roles="dow" onclick="setQuery(this)">5G mm-wave</button>
+    <button class="query-ex" data-roles="dow" onclick="setQuery(this)">soldier wearable</button>
+    <button class="query-ex" data-roles="dow" onclick="setQuery(this)">conformal antenna</button>
+    <button class="query-ex" data-roles="dow" onclick="setQuery(this)">phased array antennas</button>
 
     <!-- Member persona - technical materials/processes, all verified to hit -->
     <button class="query-ex" data-roles="member" onclick="setQuery(this)">silver nanoparticle ink</button>
@@ -676,7 +716,7 @@ body[data-role="member"] .kg-grid{grid-template-columns:1fr}
         </div>
       </div>
       <div style="font-size:12px;color:var(--muted);line-height:1.6">
-        <strong style="color:var(--text)">Bipartisan reach:</strong> 5 Democratic, 5 Republican districts. Strengthens CHIPS Act and DoD manufacturing base arguments for continued funding.<br><br>
+        <strong style="color:var(--text)">Bipartisan reach:</strong> 5 Democratic, 5 Republican districts. Strengthens CHIPS Act and DoW manufacturing base arguments for continued funding.<br><br>
         <strong style="color:var(--text)">Key committees:</strong> House Armed Services (Turner, OH-10), Science &amp; Technology (Khanna, CA-17), Appropriations Defense subcommittee overlap.
       </div>
     </div>
@@ -699,12 +739,12 @@ body[data-role="member"] .kg-grid{grid-template-columns:1fr}
 </div>
 
 <!-- ═══════════════════════════════════════════ -->
-<!-- SECTION: COMMERCIAL DEPLOYMENTS & DoD PEOs (ADMIN + DoD) -->
+<!-- SECTION: COMMERCIAL DEPLOYMENTS & DoW PEOs (ADMIN + DoW) -->
 <!-- ═══════════════════════════════════════════ -->
 </div><!-- /admin-only wrapper -->
 
-<div data-roles="admin dod">
-<div class="sec-divider"><div class="sd-icon" style="background:#fdf4ff;color:#86198f">🚀</div> Commercial deployments &amp; DoD acquisition pathways</div>
+<div data-roles="admin dow">
+<div class="sec-divider"><div class="sd-icon" style="background:#fdf4ff;color:#86198f">🚀</div> Commercial deployments &amp; DoW acquisition pathways</div>
 
 <div class="grid2 equal">
   <!-- Commercial Deployments -->
@@ -715,9 +755,9 @@ body[data-role="member"] .kg-grid{grid-template-columns:1fr}
     </div>
   </div>
 
-  <!-- DoD PEO / Acquisition Executives -->
+  <!-- DoW PEO / Acquisition Executives -->
   <div class="panel">
-    <h2><span class="dot" style="background:#9a3412"></span> DoD program &amp; acquisition executive mapping <span style="font-size:11px;color:var(--muted);font-weight:500;margin-left:auto">Click any PEO to see aligned projects →</span></h2>
+    <h2><span class="dot" style="background:#9a3412"></span> DoW program &amp; acquisition executive mapping <span style="font-size:11px;color:var(--muted);font-weight:500;margin-left:auto">Click any PEO to see aligned projects →</span></h2>
     <div data-panel="peos" style="margin-top:10px">
       <div style="padding:24px;text-align:center;color:var(--muted);font-size:12px">Loading PEOs from /api/peos...</div>
     </div>
@@ -725,11 +765,126 @@ body[data-role="member"] .kg-grid{grid-template-columns:1fr}
 </div>
 
 <!-- ═══════════════════════════════════ -->
+<!-- SECTION: DESIGN WIZARD (DoW + Admin) -->
+<!-- ═══════════════════════════════════ -->
+<div data-roles="dow admin" id="wizardSection">
+<div class="sec-divider"><div class="sd-icon" style="background:rgba(234,88,12,.1);color:#ea580c">⚡</div> Design wizard — Materials → Synthesis → Performance</div>
+
+<div class="panel" style="padding:24px">
+
+  <!-- Template Selector -->
+  <div style="margin-bottom:20px">
+    <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;font-weight:700;color:var(--muted);margin-bottom:10px">Quick-start templates</div>
+    <div id="wizTemplates" style="display:flex;gap:10px;flex-wrap:wrap"></div>
+  </div>
+
+  <!-- Step Indicator -->
+  <div id="wizSteps" style="display:flex;align-items:center;gap:0;margin-bottom:24px;padding:16px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
+    <div class="wiz-step active" data-step="1">
+      <div class="wiz-step-num">1</div>
+      <div class="wiz-step-label">Materials</div>
+      <div class="wiz-step-desc">Inks · Substrates · Components</div>
+    </div>
+    <div class="wiz-arrow">→</div>
+    <div class="wiz-step" data-step="2">
+      <div class="wiz-step-num">2</div>
+      <div class="wiz-step-label">Synthesis</div>
+      <div class="wiz-step-desc">Curing · Fabrication · Assembly</div>
+    </div>
+    <div class="wiz-arrow">→</div>
+    <div class="wiz-step" data-step="3">
+      <div class="wiz-step-num">3</div>
+      <div class="wiz-step-label">Performance</div>
+      <div class="wiz-step-desc">S-params · Power · Reliability</div>
+    </div>
+  </div>
+
+  <!-- Context Bar (shows selections from previous steps) -->
+  <div id="wizContext" style="display:none;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:18px;font-size:12px">
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--teal);margin-bottom:6px">Selected from previous steps</div>
+    <div id="wizContextContent"></div>
+  </div>
+
+  <!-- Step 1: Materials -->
+  <div id="wizPanel1" class="wiz-panel">
+    <div class="wiz-group">
+      <div class="wiz-group-title">Conductive Inks</div>
+      <div class="wiz-options" id="wizCondInks"></div>
+    </div>
+    <div class="wiz-group">
+      <div class="wiz-group-title">Dielectric Inks</div>
+      <div class="wiz-options" id="wizDielInks"></div>
+    </div>
+    <div class="wiz-group">
+      <div class="wiz-group-title">Substrates</div>
+      <div class="wiz-options" id="wizSubstrates"></div>
+    </div>
+    <div class="wiz-group">
+      <div class="wiz-group-title">Active Components</div>
+      <div class="wiz-options" id="wizActives"></div>
+    </div>
+    <div style="margin-top:18px;text-align:right">
+      <button class="btn wiz-next" onclick="wizGoStep(2)">Next: Synthesis →</button>
+    </div>
+  </div>
+
+  <!-- Step 2: Synthesis -->
+  <div id="wizPanel2" class="wiz-panel" style="display:none">
+    <div class="wiz-group">
+      <div class="wiz-group-title">Curing / Sintering</div>
+      <div class="wiz-options" id="wizCuring"></div>
+    </div>
+    <div class="wiz-group">
+      <div class="wiz-group-title">Fabrication / Printing</div>
+      <div class="wiz-options" id="wizFabrication"></div>
+    </div>
+    <div class="wiz-group">
+      <div class="wiz-group-title">Assembly / Surface Mounting</div>
+      <div class="wiz-options" id="wizAssembly"></div>
+    </div>
+    <div class="wiz-group">
+      <div class="wiz-group-title">Design / EM Tools</div>
+      <div class="wiz-options" id="wizDesign"></div>
+    </div>
+    <div style="margin-top:18px;display:flex;justify-content:space-between">
+      <button class="btn wiz-back" onclick="wizGoStep(1)">← Back: Materials</button>
+      <button class="btn wiz-next" onclick="wizGoStep(3)">Next: Performance →</button>
+    </div>
+  </div>
+
+  <!-- Step 3: Performance -->
+  <div id="wizPanel3" class="wiz-panel" style="display:none">
+    <div class="wiz-group">
+      <div class="wiz-group-title">Expected Performance Metrics</div>
+      <div id="wizPerfResults" style="display:grid;grid-template-columns:1fr 1fr;gap:12px"></div>
+    </div>
+    <div class="wiz-group" style="margin-top:16px">
+      <div class="wiz-group-title">Reliability & Standards</div>
+      <div id="wizReliability" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px"></div>
+    </div>
+    <div class="wiz-group" style="margin-top:16px">
+      <div class="wiz-group-title">GraphRAG Query — Ask about this configuration</div>
+      <div style="display:flex;gap:10px;margin-top:8px">
+        <input type="text" id="wizQueryInput" placeholder="e.g. What power level can Dycotec ink on MoCu handle?" style="flex:1;padding:10px 14px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:13px;font-family:inherit" />
+        <button class="btn wiz-next" onclick="wizRunQuery()">Ask →</button>
+      </div>
+      <div id="wizQueryResult" style="margin-top:12px"></div>
+    </div>
+    <div style="margin-top:18px;display:flex;justify-content:space-between">
+      <button class="btn wiz-back" onclick="wizGoStep(2)">← Back: Synthesis</button>
+      <button class="btn wiz-next" onclick="wizExport()">Export Configuration ↗</button>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ═══════════════════════════════════ -->
 <!-- SECTION: KNOWLEDGE GRAPH + INGEST (ALL ROLES) -->
 <!-- ═══════════════════════════════════ -->
 </div><!-- /admin+dod wrapper -->
 
-<div data-roles="admin dod member">
+<div data-roles="admin dow member">
 <div class="sec-divider"><div class="sd-icon" style="background:var(--light-teal);color:var(--teal)">🔬</div> Knowledge graph &amp; ingestion pipeline</div>
 
 <div class="grid2 kg-grid">
@@ -809,7 +964,7 @@ body[data-role="member"] .kg-grid{grid-template-columns:1fr}
     <div class="panel">
       <h2><span class="dot" style="background:var(--purple)"></span> Role-based access control</h2>
       <div class="access-row"><span class="role-badge admin">Admin</span><span style="flex:1">NextFlex staff</span><span class="access-perm">Full access</span></div>
-      <div class="access-row"><span class="role-badge gov">DoD</span><span style="flex:1">ARL &bull; DEVCOM</span><span class="access-perm">Mission data</span></div>
+      <div class="access-row"><span class="role-badge gov">DoW</span><span style="flex:1">ARL &bull; DEVCOM</span><span class="access-perm">Mission data</span></div>
       <div class="access-row"><span class="role-badge industry">Industry</span><span style="flex:1">Raytheon &bull; NG</span><span class="access-perm">Full + eval</span></div>
       <div class="access-row"><span class="role-badge member">Tier 1</span><span style="flex:1">Industry members</span><span class="access-perm">Full + proprietary</span></div>
       <div class="access-row"><span class="role-badge member">Tier 2</span><span style="flex:1">Academic</span><span class="access-perm">Aggregated</span></div>
@@ -1092,9 +1247,9 @@ body[data-role="member"] .kg-grid{grid-template-columns:1fr}
     </div>
     <div class="team-member">
       <span class="tm-role ind">Industry Partner</span>
-      <div class="tm-name">Northrop Grumman</div>
+      <div class="tm-name">Natick Soldier Center</div>
       <div class="tm-org">HE Manufacturing &bull; Consultant</div>
-      <div class="tm-focus">DoD HE validation, PEO Soldier pathway, subscription intent</div>
+      <div class="tm-focus">DoW HE validation, PEO Soldier pathway, subscription intent</div>
       <div class="tm-geo">📍 VA-10 &bull; Falls Church, VA</div>
     </div>
   </div>
@@ -1105,14 +1260,14 @@ body[data-role="member"] .kg-grid{grid-template-columns:1fr}
   <h2><span class="dot" style="background:var(--green)"></span> Project timeline — 15 months</h2>
   <div class="timeline">
     <div class="tl-phase"><div class="tl-months">Months 1–5</div><div class="tl-title">Phase 1: Foundation</div><div class="tl-items">OWL-DL ontology v1.0 (PERC validated)<br>Secure AI/ML pipeline prototype<br>GraphRAG demo &bull; Security arch approved<br>Geo/district/PEO entity schema defined<br>ARL LoS engagement</div></div>
-    <div class="tl-phase"><div class="tl-months">Months 6–10</div><div class="tl-title">Phase 2: Build &amp; Ingest</div><div class="tl-items">≥100 reports ingested &bull; ≥1,000 entities<br>RBAC operational &bull; 100% enforcement<br>Commercial deploy status tagging<br>Congressional district auto-extraction<br>DoD PEO linkage mapping</div></div>
+    <div class="tl-phase"><div class="tl-months">Months 6–10</div><div class="tl-title">Phase 2: Build &amp; Ingest</div><div class="tl-items">≥100 reports ingested &bull; ≥1,000 entities<br>RBAC operational &bull; 100% enforcement<br>Commercial deploy status tagging<br>Congressional district auto-extraction<br>DoW PEO linkage mapping</div></div>
     <div class="tl-phase"><div class="tl-months">Months 11–15</div><div class="tl-title">Phase 3: Validate &amp; Transition</div><div class="tl-items">Raytheon/NG platform evaluation<br>Tech Hub data ingestion pilot<br>Congressional impact report generator<br>DaaS sustainability plan<br>Platform demonstrator + videos</div></div>
   </div>
 </div>
 
 <!-- ═══ FOOTER ═══ -->
 <div class="footer">
-  UMass Lowell + Raytheon (RURI) + Northrop Grumman &bull; NextFlex PC 11.0 Topic 11.3 &bull; Submission: May 20, 2026 &bull; <a href="mailto:proposal@nextflex.us">proposal@nextflex.us</a>
+  UMass Lowell + Raytheon (RURI) + Natick Soldier Center &bull; NextFlex PC 11.0 Topic 11.3 &bull; Submission: May 20, 2026 &bull; <a href="mailto:proposal@nextflex.us">proposal@nextflex.us</a>
 </div>
 
 </div>
@@ -1275,7 +1430,7 @@ async function drillIntoDistrict(code) {
 async function drillIntoPEO(peo) {
   showDrillModal({
     title: `${peo} acquisition pathway`,
-    subtitle: 'Projects aligned to this DoD Program Executive Office',
+    subtitle: 'Projects aligned to this DoW Program Executive Office',
     apiUrl: `/api/projects?peo=${encodeURIComponent(peo)}&limit=200`,
   });
 }
@@ -1467,7 +1622,7 @@ function scrollToPanel(panelType) {
 
 loadLivePortalStats();
 
-// DoD role counters (mission-specific, not portal-derived)
+// DoW role counters (mission-specific, not portal-derived)
 animateCounter('d1', 412);
 animateCounter('d2', 5);
 animateCounter('d3', 8);
@@ -1479,7 +1634,7 @@ setTimeout(() => { const el = document.getElementById('m4'); if (el) el.textCont
 // ═══ SESSION-DRIVEN ROLE (real auth, not a switcher) ═══
 const roleDescriptors = {
   admin:  { icon: '★', label: 'NextFlex Admin',     desc: 'Full ops · Districts · Team',         tag: '★ NextFlex Admin',     tagClass: 'admin'  },
-  dod:    { icon: '⬢', label: 'DoD User',           desc: 'PEOs · Mission · Security',           tag: '⬢ DoD User',           tagClass: 'dod'    },
+  dow:    { icon: '⬢', label: 'DoW User',           desc: 'PEOs · Mission · Security',           tag: '⬢ DoW User',           tagClass: 'dow'    },
   member: { icon: '⚙', label: 'Member / Industry',  desc: 'Knowledge graph · Query',             tag: '⚙ Member · Tier 1',    tagClass: 'member' },
 };
 
@@ -1729,6 +1884,336 @@ new Chart(document.getElementById('relChart'), {
   }
 });
 }
+
+// ═══════════════════════════════════════════
+// DESIGN WIZARD — Materials → Synthesis → Performance
+// ═══════════════════════════════════════════
+
+const WIZ_DATA = {
+  condInks: [
+    {id:'dycotec', name:'Dycotec DM-SIA-3301 (Ag NP)', detail:'3.4× bulk Ag · Rq 1.3 µm · best overall', props:{resistivity:'3.4× bulk', rq:'1.3 µm'}},
+    {id:'pvnano', name:'PV Nanocell Sicrys I60PM-116 (Ag NP)', detail:'6.5× bulk Ag · Rq 1.3 µm', props:{resistivity:'6.5× bulk', rq:'1.3 µm'}},
+    {id:'henkel', name:'Henkel Loctite ECI 1011 (Ag NP)', detail:'6.5× bulk Ag · Rq 2.1 µm', props:{resistivity:'6.5× bulk', rq:'2.1 µm'}},
+    {id:'cu005', name:'Copper ink (Electroninks CI-005)', detail:'35% solids · lower cost', props:{resistivity:'8.7e-8 Ω·m'}},
+    {id:'carbon', name:'Carbon ink (Sun Chemical CRSN2442)', detail:'25 Ω/sq · flexible', props:{sheet_res:'25 Ω/sq'}},
+  ],
+  dielInks: [
+    {id:'nea121', name:'Norland NEA121 (UV dielectric)', detail:'εr=3.4 · tan δ=0.009 · UV 365nm cure', props:{epsilon_r:3.4, tan_delta:0.009}},
+    {id:'bst', name:'BST sinterless (PERC/RURI)', detail:'εr=200 · phase shifter applications', props:{epsilon_r:200, tan_delta:0.008}},
+    {id:'epotek', name:'EPO-TEK H20E (conductive epoxy)', detail:'Thermal 150°C/1hr · die attach', props:{conductivity:'1e5 S/m'}},
+  ],
+  substrates: [
+    {id:'mocu', name:'MoCu carrier (molybdenum-copper)', detail:'CTE 7 ppm/K · rigid · high-power', props:{type:'rigid', cte:'7 ppm/K'}},
+    {id:'kapton25', name:'Kapton HN 25 µm polyimide', detail:'Dk 3.4 · CTE 20 · flexible', props:{type:'flexible', dk:3.4}},
+    {id:'itera', name:'Isola I-Tera MT40 5mil PCB', detail:'Dk 3.45 · tan δ 0.0031 · rigid', props:{type:'rigid', dk:3.45}},
+    {id:'rogers', name:'Rogers RO4003C 8mil', detail:'Dk 3.38 · tan δ 0.0027 · rigid', props:{type:'rigid', dk:3.38}},
+    {id:'sic', name:'SiC die substrate 4mil', detail:'Dk 9.7 · for MMIC dies', props:{type:'rigid', dk:9.7}},
+    {id:'kapton50', name:'Kapton HN 50 µm polyimide', detail:'Flexible · thicker variant', props:{type:'flexible', dk:3.4}},
+  ],
+  actives: [
+    {id:'adpa1112', name:'Analog Devices ADPA1112', detail:'GaN pHEMT · 1-22 GHz · Psat 42.8 dBm · PAE 39%', props:{psat:'42.8 dBm', pae:'39%'}},
+    {id:'tga2594', name:'Qorvo TGA2594', detail:'GaN · 2-6 GHz · 25 W', props:{power:'25 W', freq:'2-6 GHz'}},
+    {id:'tga2222', name:'Qorvo TGA2222', detail:'GaN · 8-12 GHz · 10 W', props:{power:'10 W', freq:'8-12 GHz'}},
+  ],
+  curing: [
+    {id:'tga4stage', name:'4-stage TGA-derived sintering', detail:'RT→82°C→92°C→180°C · ~140 min total', forInks:['dycotec','pvnano','henkel']},
+    {id:'laser830', name:'Laser sintering 830nm', detail:'2W · rapid · selective', forInks:['dycotec','pvnano','henkel','cu005']},
+    {id:'thermal150', name:'Thermal cure 150°C / 1hr box oven', detail:'Universal · simple', forInks:['dycotec','pvnano','henkel','cu005','carbon']},
+    {id:'uv365', name:'UV cure 365nm in-situ', detail:'1-20 mW/cm² · for dielectrics', forInks:['nea121']},
+    {id:'flash', name:'Photonic flash sintering', detail:'2000 µs · 10 J/cm² · rapid', forInks:['dycotec','pvnano','henkel','cu005']},
+  ],
+  fabrication: [
+    {id:'ajp', name:'Aerosol jet printing (Optomec AJ5X)', detail:'200 µm nozzle · 3 mm/s · 68 SCCM sheath'},
+    {id:'inkjet', name:'Inkjet printing', detail:'50 µm resolution · drop-on-demand'},
+    {id:'screen', name:'Screen printing', detail:'10 µm thickness · high throughput'},
+    {id:'syringe', name:'Syringe dispense', detail:'Gauge 22 · for viscous dielectrics'},
+  ],
+  assembly: [
+    {id:'dieattach', name:'Die attach (EPO-TEK H20E)', detail:'Conductive epoxy · 150°C/1hr cure'},
+    {id:'wirebond', name:'Wire bonding (Au 25 µm)', detail:'Traditional · proven reliability'},
+    {id:'ribbon', name:'Ribbon bonding', detail:'250 µm width · lower loss · benchmark'},
+  ],
+  design: [
+    {id:'hfss', name:'HFSS EM simulation', detail:'Gradient roughness model (Gold & Helmreich 2017)'},
+    {id:'cst', name:'CST Microwave Studio', detail:'Full-wave 3D solver'},
+    {id:'conformal', name:'Conformal antenna design', detail:'Curved substrate modeling'},
+  ],
+};
+
+const WIZ_TEMPLATES = [
+  {
+    name: 'High-Power GaN PA',
+    desc: 'Dycotec Ag NP on MoCu · TGA sintering · ADPA1112 GaN die',
+    materials: {condInks:['dycotec'], dielInks:['nea121','epotek'], substrates:['mocu','itera','sic'], actives:['adpa1112']},
+    synthesis: {curing:['tga4stage'], fabrication:['ajp'], assembly:['dieattach','wirebond'], design:['hfss']},
+  },
+  {
+    name: 'Flexible Antenna Array',
+    desc: 'PV Nanocell Ag on Kapton · UV cure + AJP · conformal design',
+    materials: {condInks:['pvnano'], dielInks:['nea121'], substrates:['kapton25'], actives:[]},
+    synthesis: {curing:['uv365','thermal150'], fabrication:['ajp'], assembly:[], design:['hfss','conformal']},
+  },
+  {
+    name: 'Folded RF Front End',
+    desc: 'Dycotec + NEA121 on I-Tera · 4-stage sinter · 53% footprint reduction',
+    materials: {condInks:['dycotec'], dielInks:['nea121'], substrates:['itera'], actives:[]},
+    synthesis: {curing:['tga4stage','uv365'], fabrication:['ajp','syringe'], assembly:[], design:['hfss']},
+  },
+  {
+    name: 'BST Phase Shifter',
+    desc: 'BST dielectric on Kapton · UV cure · beam steering applications',
+    materials: {condInks:['dycotec'], dielInks:['bst'], substrates:['kapton50'], actives:[]},
+    synthesis: {curing:['uv365','thermal150'], fabrication:['ajp'], assembly:[], design:['hfss','cst']},
+  },
+  {
+    name: 'Shielded Interconnects',
+    desc: 'Dycotec + NEA121 asymmetric stripline · 25 dB EMI improvement',
+    materials: {condInks:['dycotec'], dielInks:['nea121'], substrates:['rogers'], actives:[]},
+    synthesis: {curing:['tga4stage','uv365'], fabrication:['ajp'], assembly:['ribbon'], design:['hfss']},
+  },
+];
+
+// State
+let wizState = {
+  step: 1,
+  materials: {condInks:[], dielInks:[], substrates:[], actives:[]},
+  synthesis: {curing:[], fabrication:[], assembly:[], design:[]},
+};
+
+function wizInit() {
+  // Render templates
+  const tpl = document.getElementById('wizTemplates');
+  if (!tpl) return;
+  tpl.innerHTML = WIZ_TEMPLATES.map((t, i) => `
+    <div class="wiz-template" onclick="wizLoadTemplate(${i})">
+      <div class="wt-name">${t.name}</div>
+      <div class="wt-desc">${t.desc}</div>
+    </div>
+  `).join('');
+
+  // Render Step 1 options
+  wizRenderOptions('wizCondInks', WIZ_DATA.condInks, 'materials', 'condInks');
+  wizRenderOptions('wizDielInks', WIZ_DATA.dielInks, 'materials', 'dielInks');
+  wizRenderOptions('wizSubstrates', WIZ_DATA.substrates, 'materials', 'substrates');
+  wizRenderOptions('wizActives', WIZ_DATA.actives, 'materials', 'actives');
+
+  // Render Step 2 options
+  wizRenderOptions('wizCuring', WIZ_DATA.curing, 'synthesis', 'curing');
+  wizRenderOptions('wizFabrication', WIZ_DATA.fabrication, 'synthesis', 'fabrication');
+  wizRenderOptions('wizAssembly', WIZ_DATA.assembly, 'synthesis', 'assembly');
+  wizRenderOptions('wizDesign', WIZ_DATA.design, 'synthesis', 'design');
+}
+
+function wizRenderOptions(containerId, items, stateGroup, stateKey) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = items.map(item => `
+    <div class="wiz-opt ${wizState[stateGroup][stateKey].includes(item.id) ? 'selected' : ''}"
+         data-id="${item.id}" onclick="wizToggle(this, '${stateGroup}', '${stateKey}', '${item.id}')">
+      <div class="wiz-check">✓</div>
+      <div class="wiz-opt-info">
+        <div class="wiz-opt-name">${item.name}</div>
+        <div class="wiz-opt-detail">${item.detail}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function wizToggle(el, group, key, id) {
+  const arr = wizState[group][key];
+  const idx = arr.indexOf(id);
+  if (idx >= 0) { arr.splice(idx, 1); el.classList.remove('selected'); }
+  else { arr.push(id); el.classList.add('selected'); }
+}
+
+function wizGoStep(step) {
+  wizState.step = step;
+  // Update step indicators
+  document.querySelectorAll('.wiz-step').forEach(s => {
+    const sn = parseInt(s.dataset.step);
+    s.classList.remove('active', 'done');
+    if (sn === step) s.classList.add('active');
+    else if (sn < step) s.classList.add('done');
+  });
+  // Show/hide panels
+  for (let i = 1; i <= 3; i++) {
+    const p = document.getElementById('wizPanel' + i);
+    if (p) p.style.display = i === step ? 'block' : 'none';
+  }
+  // Update context bar
+  wizUpdateContext(step);
+  // If step 3, compute performance
+  if (step === 3) wizComputePerformance();
+  // Scroll wizard into view
+  document.getElementById('wizardSection')?.scrollIntoView({behavior: 'smooth', block: 'start'});
+}
+
+function wizUpdateContext(step) {
+  const ctx = document.getElementById('wizContext');
+  const content = document.getElementById('wizContextContent');
+  if (step <= 1) { ctx.style.display = 'none'; return; }
+  ctx.style.display = 'block';
+  let html = '';
+  // Show materials selections
+  const mats = wizState.materials;
+  const allSelected = [];
+  ['condInks','dielInks','substrates','actives'].forEach(key => {
+    mats[key].forEach(id => {
+      const item = WIZ_DATA[key].find(x => x.id === id);
+      if (item) allSelected.push(item.name);
+    });
+  });
+  if (allSelected.length > 0) {
+    html += '<div style="margin-bottom:6px"><strong style="color:var(--teal)">Materials:</strong> ' + allSelected.join(' · ') + '</div>';
+  }
+  // Show synthesis selections on step 3
+  if (step >= 3) {
+    const syn = wizState.synthesis;
+    const synSelected = [];
+    ['curing','fabrication','assembly','design'].forEach(key => {
+      syn[key].forEach(id => {
+        const item = WIZ_DATA[key].find(x => x.id === id);
+        if (item) synSelected.push(item.name);
+      });
+    });
+    if (synSelected.length > 0) {
+      html += '<div><strong style="color:var(--green)">Synthesis:</strong> ' + synSelected.join(' · ') + '</div>';
+    }
+  }
+  content.innerHTML = html;
+}
+
+function wizComputePerformance() {
+  const results = document.getElementById('wizPerfResults');
+  const reliability = document.getElementById('wizReliability');
+  if (!results || !reliability) return;
+
+  // Compute performance based on selected materials + processes
+  const hasGaN = wizState.materials.actives.some(id => ['adpa1112','tga2594','tga2222'].includes(id));
+  const hasDycotec = wizState.materials.condInks.includes('dycotec');
+  const hasMoCu = wizState.materials.substrates.includes('mocu');
+  const hasNEA121 = wizState.materials.dielInks.includes('nea121');
+  const hasTGA = wizState.synthesis.curing.includes('tga4stage');
+  const hasAJP = wizState.synthesis.fabrication.includes('ajp');
+  const hasHFSS = wizState.synthesis.design.includes('hfss');
+
+  const metrics = [];
+  if (hasGaN) {
+    const pa = WIZ_DATA.actives.find(a => wizState.materials.actives.includes(a.id));
+    metrics.push({label:'Peak Output Power', value: pa?.props?.psat || '38-43 dBm', range:'Based on selected MMIC'});
+    metrics.push({label:'PAE', value: pa?.props?.pae || '35-42%', range:'At rated power'});
+  }
+  if (hasDycotec && hasTGA) {
+    metrics.push({label:'Conductor Resistivity', value:'3.4× bulk Ag', range:'After 4-stage TGA sinter'});
+    metrics.push({label:'Surface Roughness Rq', value:'1.3 µm', range:'At 25°C platen (optimal)'});
+  }
+  if (hasAJP) {
+    metrics.push({label:'Trace Width', value:'50-250 µm', range:'AJP Optomec AJ5X capability'});
+    metrics.push({label:'Fab Tolerance', value:'±127 µm', range:'Standard manufacturing'});
+  }
+  if (hasNEA121 && hasAJP) {
+    metrics.push({label:'Dielectric Rq', value:'0.15-0.83 µm', range:'UV intensity dependent'});
+  }
+  if (hasHFSS) {
+    metrics.push({label:'EM Model', value:'Gradient (validated)', range:'Gold & Helmreich 2017'});
+  }
+  if (metrics.length === 0) {
+    metrics.push({label:'Select materials & processes', value:'—', range:'Go back to configure'});
+  }
+  results.innerHTML = metrics.map(m => `
+    <div class="wiz-perf-card">
+      <div class="wpc-label">${m.label}</div>
+      <div class="wpc-value">${m.value}</div>
+      <div class="wpc-range">${m.range}</div>
+    </div>
+  `).join('');
+
+  // Reliability standards
+  const relItems = [
+    {icon:'🔥', name:'Thermal Cycling', detail:'IPC-9701 · -40°C to +125°C · 500 cycles'},
+    {icon:'💧', name:'Humidity', detail:'JEDEC JESD22-A101 · 85°C/85% RH · 1000hr'},
+    {icon:'📐', name:'Mechanical Flex', detail:'50,000 cycles · 10mm bend radius'},
+    {icon:'☢️', name:'Radiation', detail:'MIL-STD · dose rate TBD'},
+    {icon:'💥', name:'Shock & Vibe', detail:'MIL-STD-810H'},
+    {icon:'❄️', name:'Extreme Cold', detail:'Per application spec'},
+  ];
+  reliability.innerHTML = relItems.map(r => `
+    <div class="wiz-rel-card">
+      <div class="wrc-icon">${r.icon}</div>
+      <div class="wrc-name">${r.name}</div>
+      <div class="wrc-detail">${r.detail}</div>
+    </div>
+  `).join('');
+}
+
+function wizLoadTemplate(idx) {
+  const t = WIZ_TEMPLATES[idx];
+  wizState.materials = JSON.parse(JSON.stringify(t.materials));
+  wizState.synthesis = JSON.parse(JSON.stringify(t.synthesis));
+  // Re-render all options with updated selections
+  wizRenderOptions('wizCondInks', WIZ_DATA.condInks, 'materials', 'condInks');
+  wizRenderOptions('wizDielInks', WIZ_DATA.dielInks, 'materials', 'dielInks');
+  wizRenderOptions('wizSubstrates', WIZ_DATA.substrates, 'materials', 'substrates');
+  wizRenderOptions('wizActives', WIZ_DATA.actives, 'materials', 'actives');
+  wizRenderOptions('wizCuring', WIZ_DATA.curing, 'synthesis', 'curing');
+  wizRenderOptions('wizFabrication', WIZ_DATA.fabrication, 'synthesis', 'fabrication');
+  wizRenderOptions('wizAssembly', WIZ_DATA.assembly, 'synthesis', 'assembly');
+  wizRenderOptions('wizDesign', WIZ_DATA.design, 'synthesis', 'design');
+  wizGoStep(1);
+}
+
+async function wizRunQuery() {
+  const q = document.getElementById('wizQueryInput')?.value?.trim();
+  if (!q) return;
+  const panel = document.getElementById('wizQueryResult');
+  panel.innerHTML = '<div style="padding:16px;text-align:center;color:var(--muted);font-size:13px">Querying GraphRAG...</div>';
+  try {
+    const resp = await fetch('/api/graphrag', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({question: q}),
+      credentials: 'same-origin',
+    });
+    const d = await resp.json();
+    let html = `<div style="padding:14px;background:var(--bg);border:1px solid var(--border);border-radius:10px;font-size:13px;line-height:1.6">${escapeHtml(d.answer)}</div>`;
+    html += '<div style="margin-top:10px;font-size:11px;color:var(--muted)">Sources: ';
+    html += d.citations.map(c => `<span style="color:var(--teal)">[${c.source_type}]</span> ${escapeHtml((c.project_title||'').slice(0,40))}`).join(' · ');
+    html += `</div><div style="font-size:10px;color:var(--muted);margin-top:4px">Breakdown: pdf=${d.source_breakdown.pdf}, pptx=${d.source_breakdown.pptx}, public=${d.source_breakdown.public}, narrative=${d.source_breakdown.narrative}</div>`;
+    panel.innerHTML = html;
+  } catch (e) {
+    panel.innerHTML = `<div style="padding:14px;color:var(--muted)">${e.message}</div>`;
+  }
+}
+
+function wizExport() {
+  const config = {
+    materials: {},
+    synthesis: {},
+  };
+  ['condInks','dielInks','substrates','actives'].forEach(key => {
+    config.materials[key] = wizState.materials[key].map(id => {
+      const item = WIZ_DATA[key]?.find(x => x.id === id);
+      return item ? item.name : id;
+    });
+  });
+  ['curing','fabrication','assembly','design'].forEach(key => {
+    config.synthesis[key] = wizState.synthesis[key].map(id => {
+      const item = WIZ_DATA[key]?.find(x => x.id === id);
+      return item ? item.name : id;
+    });
+  });
+  const json = JSON.stringify(config, null, 2);
+  const blob = new Blob([json], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'design-wizard-config.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// Initialize wizard after stats load
+setTimeout(wizInit, 2000);
 </script>
 </body>
 </html>

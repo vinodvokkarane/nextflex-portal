@@ -203,7 +203,7 @@ def health():
 def role_classifications(role: str) -> list[str]:
     if role == "admin":
         return ["public", "member_share", "mission_relevant", "cui"]
-    if role == "dod":
+    if role == "dow":
         return ["public", "mission_relevant", "cui"]
     if role == "member":
         return ["public", "member_share"]
@@ -628,7 +628,7 @@ def synthesize_llm(question, chunks, graph_ctx, role):
     graph_block = ", ".join(f"{e['name']} ({e['type']})" for e in graph_ctx[:10]) or "(none)"
     role_guidance = {
         "admin": "You have full access. Answer comprehensively.",
-        "dod": "Focus on mission relevance, RF performance, and acquisition pathways.",
+        "dow": "Focus on mission relevance, RF performance, and acquisition pathways.",
         "member": "Focus on technical materials, processes, and performance characterization.",
     }.get(role, "")
     system = (

@@ -12,7 +12,7 @@ async function loadSession() {
     const user = await res.json();
     const badge = document.getElementById('userBadge');
     if (badge) {
-      const roleLabel = { admin: 'Admin', dod: 'DoD', member: 'Member' }[user.role] || user.role;
+      const roleLabel = { admin: 'Admin', dow: 'DoW', member: 'Member' }[user.role] || user.role;
       badge.textContent = `${user.display_name} · ${roleLabel}`;
       badge.title = user.title;
     }
@@ -375,7 +375,7 @@ function filterByPEO(peo) {
       $('#searchResults').innerHTML = '';
       const head = document.createElement('div');
       head.style.cssText = 'padding:14px 16px;background:var(--card);border:1px solid var(--border);border-radius:8px;margin-bottom:12px';
-      head.innerHTML = `<div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">DoD PEO acquisition pathway</div>
+      head.innerHTML = `<div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">DoW PEO acquisition pathway</div>
         <div style="font-size:15px;font-weight:700">${escapeHtml(peo)} — ${d.count} aligned project${d.count === 1 ? '' : 's'}</div>`;
       $('#searchResults').appendChild(head);
       const list = document.createElement('div');

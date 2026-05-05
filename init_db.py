@@ -8,7 +8,7 @@ in Render free tier (512 MB RAM, <10 sec generation, ~15 MB on disk):
   - ~5,000 typed relationships
   - ~6,000 text chunks with FTS5 search
   - 30 congressional districts
-  - 6 DoD PEOs
+  - 6 DoW PEOs
   - ~30 commercial deployments
 
 Run: python init_db.py [--reset]
@@ -147,7 +147,7 @@ DISTRICTS = [
     ("MA-03", "Massachusetts", "Lori Trahan", "D", ["UMass Lowell", "PERC/RURI"]),
     ("MA-05", "Massachusetts", "Katherine Clark", "D", ["MIT Lincoln Lab"]),
     ("CT-04", "Connecticut", "Jim Himes", "D", ["Raytheon Technologies"]),
-    ("VA-10", "Virginia", "Suhas Subramanyam", "D", ["Northrop Grumman"]),
+    ("VA-10", "Virginia", "Suhas Subramanyam", "D", ["Natick Soldier Center"]),
     ("VA-08", "Virginia", "Don Beyer", "D", ["PEO Soldier (Fort Belvoir)"]),
     ("MD-05", "Maryland", "Steny Hoyer", "D", ["Lockheed Martin"]),
     ("MD-01", "Maryland", "Andy Harris", "R", ["PEO IEW&S", "PEO C3T (APG)"]),
@@ -205,7 +205,7 @@ PEOS = [
 LEAD_INSTITUTIONS = [
     ("UMass Lowell", "MA-03"), ("American Semiconductor", "ID-02"),
     ("GE Aerospace", "OH-01"), ("Boeing R&T", "WA-09"),
-    ("Northrop Grumman", "VA-10"), ("Raytheon Technologies", "CT-04"),
+    ("Natick Soldier Center", "VA-10"), ("Raytheon Technologies", "CT-04"),
     ("Lockheed Martin", "MD-05"), ("Honeywell Aerospace", "AZ-04"),
     ("Optomec Inc.", "AZ-01"), ("DuPont Electronics", "DE-AL"),
     ("Stanford University", "CA-16"), ("MIT Lincoln Lab", "MA-05"),
@@ -227,61 +227,105 @@ FOCUS_AREAS = [
 ]
 
 CONDUCTIVE_INKS = [
-    ("Silver nanoparticle ink (GenesINk PL1-120)", "GenesINk", {"solids_pct": 60, "diluent": "ethanol", "resistivity_ohm_m": 4.2e-8}),
+    ("Silver NP ink (Dycotec DM-SIA-3301)", "Dycotec", {"solids_pct": 45, "resistivity_x_bulk": 3.4, "rq_um": 1.3, "cte_ppm_k": 19, "tg_c": 220}),
+    ("Silver NP ink (PV Nanocell Sicrys I60PM-116)", "PV Nanocell", {"solids_pct": 60, "resistivity_x_bulk": 6.5, "rq_um": 1.3, "cte_ppm_k": 19}),
+    ("Silver NP ink (Henkel Loctite ECI 1011)", "Henkel", {"solids_pct": 50, "resistivity_x_bulk": 6.5, "rq_um": 2.1}),
     ("Copper ink (Electroninks CI-005)", "Electroninks", {"solids_pct": 35, "resistivity_ohm_m": 8.7e-8}),
-    ("Silver flake ink (DuPont PE872)", "DuPont", {"solids_pct": 70, "resistivity_ohm_m": 6.2e-8}),
-    ("Silver paste (Henkel ECI 1010)", "Henkel", {"resistivity_ohm_m": 5.1e-8}),
-    ("Silver nanoparticle (NovaCentrix)", "NovaCentrix", {"solids_pct": 55, "resistivity_ohm_m": 4.8e-8}),
+    ("Gold ink (UTDots Au-CB)", "UTDots", {"solids_pct": 30, "resistivity_ohm_m": 3.5e-8}),
     ("Carbon conductive ink (Sun Chemical CRSN2442)", "Sun Chemical", {"sheet_resistance_ohm_sq": 25}),
 ]
 DIELECTRIC_INKS = [
+    ("UV dielectric (Norland NEA121)", "Norland", {"cure": "UV 365nm + in-situ AJP", "epsilon_r": 3.4, "tan_delta": 0.009, "rq_um": 0.15, "tg_c": 110}),
     ("BST sinterless dielectric (PERC/RURI)", "PERC/RURI", {"cure": "uv", "epsilon_r": 200, "tan_delta": 0.008, "rq_nm": 78}),
-    ("Heraeus EL-P 5042 dielectric", "Heraeus", {"cure": "thermal", "epsilon_r": 3.5}),
-    ("DuPont 5018 dielectric", "DuPont", {"cure": "thermal", "epsilon_r": 4.0}),
-    ("Asahi CR-18G-KF", "Asahi", {"cure": "uv", "epsilon_r": 3.8}),
+    ("Conductive epoxy (EPO-TEK H20E)", "Epoxy Technology", {"cure": "thermal 150C/1hr", "conductivity_S_m": 1e5}),
+    ("DuPont 5018 dielectric", "DuPont", {"cure": "thermal", "epsilon_r": 4.0, "tg_c": 180}),
+]
+RESISTIVE_INKS = [
+    ("Resistive carbon ink (Asahi TU-100S)", "Asahi", {"sheet_resistance_ohm_sq": 100}),
+    ("NiCr resistive paste", "Heraeus", {"sheet_resistance_ohm_sq": 50}),
+]
+GREEN_MATERIALS = [
+    ("Bio-derived PLA substrate", "NatureWorks", {"biodegradable": True, "cte_ppm_k": 68}),
+    ("Recycled PET substrate", "Eastman", {"recycled_content_pct": 100}),
 ]
 SUBSTRATES = [
-    ("Kapton HN 25um polyimide", "DuPont", {"thickness_um": 25, "cte_ppm_k": 20, "dk_1ghz": 3.4}),
-    ("Kapton HN 50um polyimide", "DuPont", {"thickness_um": 50, "cte_ppm_k": 20, "dk_1ghz": 3.4}),
-    ("PEN substrate", "Teijin", {"thickness_um": 50, "cte_ppm_k": 18}),
-    ("TPU flexible substrate", "BASF", {"thickness_um": 100, "cte_ppm_k": 150}),
-    ("PET 75um", "DuPont", {"thickness_um": 75}),
-    ("Glass-PI laminate", "DuPont", {"thickness_um": 75}),
+    ("Kapton HN 25um polyimide", "DuPont", {"thickness_um": 25, "cte_ppm_k": 20, "tg_c": 410, "dk_1ghz": 3.4, "type": "flexible"}),
+    ("Kapton HN 50um polyimide", "DuPont", {"thickness_um": 50, "cte_ppm_k": 20, "tg_c": 410, "dk_1ghz": 3.4, "type": "flexible"}),
+    ("Isola I-Tera MT40 5mil PCB", "Isola", {"thickness_um": 127, "dk_10ghz": 3.45, "tan_delta": 0.0031, "type": "rigid"}),
+    ("MoCu carrier (molybdenum-copper)", "Elcon", {"thickness_um": 500, "cte_ppm_k": 7.0, "type": "rigid"}),
+    ("Rogers RO4003C 8mil", "Rogers", {"thickness_um": 203, "dk_10ghz": 3.38, "tan_delta": 0.0027, "type": "rigid"}),
+    ("SiC die substrate 4mil", "Wolfspeed", {"thickness_um": 100, "dk_10ghz": 9.7, "type": "rigid"}),
+    ("PEN substrate", "Teijin", {"thickness_um": 50, "cte_ppm_k": 18, "type": "flexible"}),
+    ("3D printable photopolymer", "Formlabs", {"thickness_um": 100, "type": "3d_printable"}),
 ]
 ACTIVE_COMPONENTS = [
+    ("Analog Devices ADPA1112 GaN pHEMT", "Analog Devices", {"part": "ADPA1112", "tech": "GaN-on-SiC", "freq_ghz": "1-22", "psat_dbm": 42.8, "pae_pct": 39}),
+    ("Qorvo TGA2594 GaN MMIC", "Qorvo", {"part": "TGA2594", "tech": "150nm GaN-on-SiC", "freq_ghz": "2-6", "power_w": 25}),
     ("Qorvo TGA2222 GaN MMIC", "Qorvo", {"part": "TGA2222", "tech": "150nm GaN-on-SiC", "freq_ghz": "8-12", "power_w": 10}),
-    ("Analog Devices AD8009", "Analog Devices", {"part": "AD8009", "tech": "BiCMOS"}),
     ("Texas Instruments LMV851", "Texas Instruments", {"part": "LMV851", "tech": "CMOS"}),
 ]
 
 PROCESSES = [
-    ("Aerosol jet printing - Optomec AJ5X", "deposition", {"nozzle_um": 300, "speed_mm_s": 5}),
-    ("Inkjet printing", "deposition", {"resolution_um": 50}),
-    ("Screen printing", "deposition", {"thickness_um": 10}),
-    ("Gravure printing", "deposition", {"speed_m_min": 5}),
-    ("Laser sintering 830nm", "post_process", {"wavelength_nm": 830, "power_w": 2, "dwell_temp_c": 250}),
-    ("Photonic flash sintering", "post_process", {"flash_us": 2000, "energy_j_cm2": 10}),
-    ("Thermal cure 150C", "post_process", {"temp_c": 150, "duration_min": 30}),
-    ("UV cure 365nm", "post_process", {"wavelength_nm": 365, "intensity_mw_cm2": 100}),
-    ("Die attach Ag epoxy", "assembly", {"cure_c": 150, "cure_min": 60}),
-    ("Wire bonding", "assembly", {"wire_um": 25}),
-    ("Anisotropic conductive film", "assembly", {}),
-    ("Reactive ion etching", "patterning", {"power_w": 100}),
+    # Fabrication / printing
+    ("Aerosol jet printing - Optomec AJ5X", "fabrication", {"nozzle_um": 200, "speed_mm_s": 3, "sheath_sccm": 68, "atomizer_sccm": 750, "platen_temp_c": 25}),
+    ("Inkjet printing", "fabrication", {"resolution_um": 50}),
+    ("Screen printing", "fabrication", {"thickness_um": 10}),
+    ("Syringe dispense (dielectric)", "fabrication", {"needle_gauge": 22}),
+    # Curing / sintering
+    ("4-stage TGA-derived sintering", "curing", {"protocol": "RT→82C/35min, 82→92C/18min, 92→180C/60min, cool/30min", "ramp_c_min": "3-5"}),
+    ("Laser sintering 830nm", "curing", {"wavelength_nm": 830, "power_w": 2, "dwell_temp_c": 250}),
+    ("Photonic flash sintering", "curing", {"flash_us": 2000, "energy_j_cm2": 10}),
+    ("Thermal cure 150C/1hr box oven", "curing", {"temp_c": 150, "duration_min": 60}),
+    ("UV cure 365nm in-situ", "curing", {"wavelength_nm": 365, "intensity_mw_cm2": "1-20", "in_situ": True}),
+    # Assembly / surface mounting
+    ("Die attach Ag epoxy (EPO-TEK H20E)", "assembly", {"epoxy": "EPO-TEK H20E", "cure_c": 150, "cure_min": 60}),
+    ("Wire bonding (Au 25um)", "assembly", {"wire_um": 25, "material": "Au"}),
+    ("Ribbon bonding", "assembly", {"type": "ribbon", "width_um": 250}),
+    # Design / EM
+    ("HFSS EM simulation", "design", {"tool": "Ansys HFSS", "roughness_model": "gradient (Gold & Helmreich 2017)"}),
+    ("CST Microwave Studio", "design", {"tool": "CST Studio Suite"}),
+    ("Conformal antenna design", "design", {"approach": "conformal", "substrate_curvature": True}),
+    # Standards
+    ("IPC-9701 thermal cycling", "standards", {"cycles": 500, "range_c": "-40 to +125"}),
+    ("JEDEC JESD22-A101 humidity", "standards", {"temp_c": 85, "rh_pct": 85, "hours": 1000}),
+    ("MIL-STD-810H shock & vibe", "standards", {}),
 ]
 
 PERF_TEMPLATES = [
-    ("X-band patch antenna S-params", "s_parameters",
-     {"freq_ghz": 10, "gain_db": (5.5, 7.0), "return_loss_db": (-22, -15), "bandwidth_mhz": (300, 450)}),
-    ("Ka-band phased array element", "s_parameters",
-     {"freq_ghz": 28, "gain_db": (4.5, 6.0), "return_loss_db": (-18, -12)}),
+    # S-parameters
+    ("Wideband amplifier S-params (1-22 GHz)", "s_parameters",
+     {"freq_ghz": "1-22", "s21_gain_db": (18, 22), "s11_return_loss_db": (-20, -15), "s22_return_loss_db": (-20, -15), "bandwidth_ghz": (15, 21)}),
+    ("Shielded interconnect S-params", "s_parameters",
+     {"freq_ghz": "1-40", "insertion_loss_db": (-1.2, -0.6), "emi_isolation_db": (-80, -55)}),
     ("BST phase shifter at 10 GHz", "s_parameters",
      {"freq_ghz": 10, "insertion_loss_db": (-2.5, -1.5), "isolation_db": (-32, -25), "phase_shift_deg": 90}),
-    ("Power amplifier at 28 GHz", "power_efficiency",
-     {"output_power_dbm": (26, 30), "pae_pct": (35, 45), "pulsed_power_w": (5, 12)}),
-    ("Cu trace surface roughness", "physical_em",
-     {"rq_nm": (80, 160), "platen_temp_c": (60, 120)}),
-    ("Sheet resistance after thermal cycle", "physical_em",
-     {"sheet_resistance_change_pct": (5, 25)}),
+    # Power & efficiency
+    ("GaN PA power handling", "power_efficiency",
+     {"peak_output_dbm": (38, 43), "pae_pct": (35, 42), "pulsed_power_w": (10, 25), "duty_cycle_pct": 10, "pulse_us": 30}),
+    ("AJP interconnect RF power test", "power_efficiency",
+     {"cw_power_w": (5, 15), "pulsed_power_w": (10, 25), "no_cooling": True}),
+    # Physical & EM
+    ("AJP surface roughness Rq", "physical_em",
+     {"rq_um": (0.644, 3.096), "platen_temp_c": (25, 85), "uv_intensity_mw_cm2": (0, 20)}),
+    ("Dimensional tolerance (BPF/coupler)", "physical_em",
+     {"max_delta_um": (24, 103), "manufacturing_tolerance_um": 127}),
+    ("Folded vs planar footprint", "physical_em",
+     {"planar_area_mm2": 639, "folded_area_mm2": 297, "reduction_pct": 53.5}),
+    # Reliability
+    ("Thermal cycle reliability", "reliability",
+     {"ipc9701_cycles": 500, "range_c": "-40 to +125", "pass": True}),
+    ("Humidity exposure", "reliability",
+     {"jedec_hours": 1000, "temp_c": 85, "rh_pct": 85, "pass": True}),
+    ("Mechanical flex test", "reliability",
+     {"cycles": 50000, "bend_radius_mm": 10, "pass": True}),
+    # Sustainability
+    ("LCA sustainability metrics", "sustainability",
+     {"waste_reduction_pct": (15, 40), "power_savings_pct": (10, 25)}),
+]
+
+DEVICE_TYPES = [
+    "Antenna", "Sensor", "RF Front End", "Power Amplifier",
+    "Phase Shifter", "Medical Device", "Automotive Electronics", "IoT Node",
 ]
 
 PI_FIRST = ["Vinod", "Alkim", "Oshadha", "Mark", "Shashi", "Pradeep", "Ramesh",
@@ -544,6 +588,16 @@ def generate_corpus(rng):
         entities[eid] = {"id": eid, "type": "material", "subtype": "active_component",
                           "name": name, "vendor": vendor, "properties": props,
                           "source_project_ids": [], "classification": cls}
+    for name, vendor, props in RESISTIVE_INKS:
+        eid = f"mat-resi-{hashlib.md5(name.encode()).hexdigest()[:8]}"
+        entities[eid] = {"id": eid, "type": "material", "subtype": "resistive_ink",
+                          "name": name, "vendor": vendor, "properties": props,
+                          "source_project_ids": [], "classification": "public"}
+    for name, vendor, props in GREEN_MATERIALS:
+        eid = f"mat-gre-{hashlib.md5(name.encode()).hexdigest()[:8]}"
+        entities[eid] = {"id": eid, "type": "material", "subtype": "green_material",
+                          "name": name, "vendor": vendor, "properties": props,
+                          "source_project_ids": [], "classification": "public"}
     for name, subtype, props in PROCESSES:
         eid = f"proc-{hashlib.md5(name.encode()).hexdigest()[:8]}"
         entities[eid] = {"id": eid, "type": "process", "subtype": subtype,
@@ -605,7 +659,7 @@ def generate_corpus(rng):
 
             keywords = rng.sample(
                 ["flexible", "printed", "wearable", "RF", "antenna", "sensor",
-                 "additive", "polyimide", "silver", "copper", "5G", "DoD", "soldier",
+                 "additive", "polyimide", "silver", "copper", "5G", "DoW", "soldier",
                  "wireless", "conformal", "MMIC", "SoP", "reliability"],
                 rng.randint(4, 7),
             )
@@ -698,7 +752,7 @@ def generate_corpus(rng):
         ("Raytheon RURI - printed BST phase shifters", "Raytheon Technologies", "pilot",
          "Pilot production of BST-based phase shifters using PERC/RURI aerosol jet process.",
          "MA-03", "PEO-IEWS"),
-        ("Northrop Grumman - flexible sensor substrates", "Northrop Grumman", "qualification",
+        ("Natick Soldier Center - flexible sensor substrates", "Natick Soldier Center", "qualification",
          "Advanced packaging reliability data for soldier-worn programs. Kapton HN + Cu ink.",
          "VA-10", "PEO-Soldier"),
         ("ANI / FlexTech - printed interconnects to bare die", "ANI Inc.", "evaluation",

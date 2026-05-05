@@ -33,8 +33,8 @@ USERS = {
         # Password: 3LEqkim$k!
         "password_hash": "$2b$12$o8II9f4aFyJ0rrka/GQmsOFviy7/ajX.Q5936L85PHyISl3kwvDEO",
     },
-    "nfx-dod": {
-        "role": "dod",
+    "nfx-dow": {
+        "role": "dow",
         "display_name": "Dr. R. Adams",
         "title": "Materials Director · ARL",
         "avatar": "RA",
