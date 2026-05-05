@@ -515,7 +515,7 @@ body[data-role="member"] .kg-grid{grid-template-columns:1fr}
   <button data-tab="graph" data-roles="admin dow member">Knowledge graph</button>
   <button data-tab="ingestion" data-roles="admin member">Report ingestion</button>
   <button data-tab="materials" data-roles="admin dow member">Materials DB</button>
-  <button data-tab="wizard" data-roles="dow admin" class="wizard-tab-btn">⚡ Design Wizard</button>
+  <button data-tab="wizard" data-roles="admin dow member" class="wizard-tab-btn">⚡ Design Wizard</button>
   <button data-tab="geo" data-roles="admin">Geo &amp; districts</button>
   <button data-tab="commercial" data-roles="admin dow">Commercial deploy</button>
   <button data-tab="peo" data-roles="admin dow">DoW PEO</button>
@@ -765,9 +765,11 @@ body[data-role="member"] .kg-grid{grid-template-columns:1fr}
 </div>
 
 <!-- ═══════════════════════════════════ -->
-<!-- SECTION: DESIGN WIZARD (DoW + Admin) -->
+<!-- SECTION: DESIGN WIZARD (ALL ROLES) -->
 <!-- ═══════════════════════════════════ -->
-<div data-roles="dow admin" id="wizardSection">
+</div><!-- close admin+dow wrapper so wizard is visible to member -->
+
+<div data-roles="admin dow member" id="wizardSection">
 <div class="sec-divider"><div class="sd-icon" style="background:rgba(234,88,12,.1);color:#ea580c">⚡</div> Design wizard — Materials → Synthesis → Performance</div>
 
 <div class="panel" style="padding:24px">
@@ -882,7 +884,6 @@ body[data-role="member"] .kg-grid{grid-template-columns:1fr}
 <!-- ═══════════════════════════════════ -->
 <!-- SECTION: KNOWLEDGE GRAPH + INGEST (ALL ROLES) -->
 <!-- ═══════════════════════════════════ -->
-</div><!-- /admin+dod wrapper -->
 
 <div data-roles="admin dow member">
 <div class="sec-divider"><div class="sd-icon" style="background:var(--light-teal);color:var(--teal)">🔬</div> Knowledge graph &amp; ingestion pipeline</div>

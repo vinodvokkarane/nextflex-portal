@@ -839,6 +839,212 @@ def public_dataset_download(asset_id: str, request: Request):
     return FileResponse(file_path, media_type=media_type, filename=file_path.name)
 
 
+# ────────── LLM Knowledge Base ──────────
+
+@app.get("/api/knowledge-base/concepts")
+def kb_concepts(request: Request):
+    """Auto-compiled concept articles from the knowledge graph."""
+    cls = role_classifications(request.state.user["role"])
+    cph = ",".join("?" * len(cls))
+    with db() as conn:
+        # Get entity subtypes as concept categories
+        subtypes = conn.execute(f"""
+            SELECT subtype, type, COUNT(*) AS entity_count,
+                   GROUP_CONCAT(DISTINCT name) AS entity_names
+            FROM entities WHERE classification IN ({cph})
+            AND subtype IS NOT NULL
+            GROUP BY subtype ORDER BY entity_count DESC
+        """, cls).fetchall()
+
+        # Get paper-derived concepts from public assets
+        papers = conn.execute("""
+            SELECT id, title, year, project_call, abstract, full_text_chars
+            FROM public_assets WHERE category='paper'
+            ORDER BY year DESC LIMIT 40
+        """).fetchall()
+
+        # Get cross-cutting relationships
+        rel_counts = conn.execute(f"""
+            SELECT r.rel_type, COUNT(*) AS n
+            FROM relationships r JOIN entities e ON e.id = r.from_id
+            WHERE e.classification IN ({cph})
+            GROUP BY r.rel_type ORDER BY n DESC LIMIT 10
+        """, cls).fetchall()
+
+    concepts = []
+    # Material concepts
+    for row in subtypes:
+        names = (row["entity_names"] or "").split(",")[:6]
+        concepts.append({
+            "id": f"concept-{row['subtype']}",
+            "category": row["type"],
+            "subtype": row["subtype"],
+            "title": row["subtype"].replace("_", " ").title(),
+            "entity_count": row["entity_count"],
+            "entities": [n.strip() for n in names],
+            "kind": "ontology",
+        })
+    # Paper concepts
+    for p in papers[:20]:
+        concepts.append({
+            "id": f"paper-{p['id']}",
+            "category": "paper",
+            "subtype": "research",
+            "title": p["title"],
+            "year": p["year"],
+            "project_call": p["project_call"],
+            "abstract": (p["abstract"] or "")[:300],
+            "chars": p["full_text_chars"] or 0,
+            "kind": "paper",
+        })
+    # Relationship concepts
+    for r in rel_counts:
+        concepts.append({
+            "id": f"rel-{r['rel_type']}",
+            "category": "relationship",
+            "subtype": r["rel_type"],
+            "title": r["rel_type"].replace("_", " → ").title(),
+            "count": r["n"],
+            "kind": "relationship",
+        })
+
+    return {"concepts": concepts, "total": len(concepts)}
+
+
+@app.get("/api/knowledge-base/article/{concept_id}")
+def kb_article(concept_id: str, request: Request):
+    """Generate a wiki-style article for a concept."""
+    cls = role_classifications(request.state.user["role"])
+    cph = ",".join("?" * len(cls))
+
+    with db() as conn:
+        if concept_id.startswith("concept-"):
+            subtype = concept_id.replace("concept-", "")
+            entities = conn.execute(f"""
+                SELECT e.*, COUNT(r.id) AS rel_count
+                FROM entities e LEFT JOIN relationships r ON r.from_id = e.id OR r.to_id = e.id
+                WHERE e.subtype = ? AND e.classification IN ({cph})
+                GROUP BY e.id ORDER BY rel_count DESC
+            """, [subtype] + cls).fetchall()
+            # Get related chunks
+            chunks = conn.execute(f"""
+                SELECT c.text, c.section, c.project_id,
+                       COALESCE(p.title, pa.title) AS source_title
+                FROM chunks c
+                LEFT JOIN projects p ON p.id = c.project_id
+                LEFT JOIN public_assets pa ON pa.id = c.project_id
+                WHERE c.text LIKE ? AND (p.classification IN ({cph}) OR pa.id IS NOT NULL)
+                LIMIT 8
+            """, [f"%{subtype.replace('_', ' ')}%"] + cls).fetchall()
+
+            return {
+                "id": concept_id,
+                "title": subtype.replace("_", " ").title(),
+                "type": "ontology",
+                "entities": [dict(e) for e in entities],
+                "related_chunks": [dict(c) for c in chunks],
+                "backlinks": [f"concept-{e['type']}" for e in entities[:5]],
+            }
+        elif concept_id.startswith("paper-"):
+            asset_id = concept_id.replace("paper-", "")
+            asset = conn.execute(
+                "SELECT * FROM public_assets WHERE id = ?", (asset_id,)
+            ).fetchone()
+            if not asset:
+                raise HTTPException(404)
+            chunks = conn.execute(
+                "SELECT text, section, page FROM chunks WHERE project_id = ? ORDER BY page LIMIT 12",
+                (asset_id,)
+            ).fetchall()
+            return {
+                "id": concept_id,
+                "title": asset["title"],
+                "type": "paper",
+                "asset": dict(asset),
+                "chunks": [dict(c) for c in chunks],
+                "download_url": f"/api/public-dataset/{asset_id}/download" if asset["has_local_file"] else None,
+            }
+        else:
+            raise HTTPException(404)
+
+
+@app.get("/api/insights/graph")
+def insights_graph(request: Request):
+    """Returns nodes + edges for the interactive knowledge graph visualization."""
+    cls = role_classifications(request.state.user["role"])
+    cph = ",".join("?" * len(cls))
+    with db() as conn:
+        # Nodes: entities (materials, processes, performance subtypes)
+        entities = conn.execute(f"""
+            SELECT id, name, type, subtype,
+                   properties, classification
+            FROM entities WHERE classification IN ({cph})
+            ORDER BY type, name LIMIT 200
+        """, cls).fetchall()
+
+        # Edges: relationships
+        rels = conn.execute(f"""
+            SELECT r.from_id, r.to_id, r.rel_type,
+                   r.source_project_id
+            FROM relationships r
+            JOIN entities e1 ON e1.id = r.from_id
+            JOIN entities e2 ON e2.id = r.to_id
+            WHERE e1.classification IN ({cph})
+            LIMIT 500
+        """, cls).fetchall()
+
+        # Paper nodes
+        papers = conn.execute("""
+            SELECT id, title, year, category, project_call,
+                   full_text_chars, has_local_file
+            FROM public_assets
+            ORDER BY year DESC LIMIT 60
+        """).fetchall()
+
+        # Project nodes (sample)
+        projects = conn.execute(f"""
+            SELECT id, title, project_call, lead_institution,
+                   focus_area, funding_amount
+            FROM projects WHERE classification IN ({cph})
+            ORDER BY RANDOM() LIMIT 30
+        """, cls).fetchall()
+
+    nodes = []
+    for e in entities:
+        try:
+            props = json.loads(e["properties"] or "{}")
+        except Exception:
+            props = {}
+        nodes.append({
+            "id": e["id"], "label": e["name"][:50], "type": e["type"],
+            "subtype": e["subtype"], "group": e["type"],
+            "vendor": props.get("vendor", ""),
+        })
+    for p in papers:
+        nodes.append({
+            "id": p["id"], "label": p["title"][:60], "type": "paper",
+            "subtype": p["category"], "group": "paper",
+            "year": p["year"], "has_file": p["has_local_file"],
+        })
+    for pr in projects:
+        nodes.append({
+            "id": pr["id"], "label": pr["title"][:50], "type": "project",
+            "subtype": pr["focus_area"], "group": "project",
+            "pc": pr["project_call"],
+        })
+
+    edges = [{"source": r["from_id"], "target": r["to_id"],
+              "type": r["rel_type"]} for r in rels]
+
+    return {
+        "nodes": nodes, "edges": edges,
+        "stats": {
+            "entities": len(entities), "papers": len(papers),
+            "projects": len(projects), "relationships": len(rels),
+        },
+    }
+
+
 # ────────── Static assets (mount last) ──────────
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 

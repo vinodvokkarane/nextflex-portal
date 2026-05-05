@@ -95,6 +95,12 @@ $$('.nav-btn').forEach((btn) => {
     if (v === 'public') {
       initPublicDataset();
     }
+    if (v === 'knowledge') {
+      initKnowledgeBase();
+    }
+    if (v === 'insights') {
+      initInsights();
+    }
   });
 });
 
@@ -541,9 +547,390 @@ async function openAssetModal(id) {
   }
 }
 
+// ═══ LLM KNOWLEDGE BASE ═══
+
+let _kbInitDone = false;
+let _kbConcepts = [];
+let _kbFilter = 'all';
+
+async function initKnowledgeBase() {
+  if (_kbInitDone) return;
+  _kbInitDone = true;
+  try {
+    const data = await fetch('/api/knowledge-base/concepts', {credentials: 'same-origin'}).then(r => r.json());
+    _kbConcepts = data.concepts || [];
+    renderKbSidebar();
+  } catch (e) {
+    console.error('KB init failed', e);
+  }
+}
+
+function renderKbSidebar() {
+  const list = $('#kbConceptList');
+  if (!list) return;
+  const q = ($('#kbSearchInput')?.value || '').toLowerCase();
+  const filtered = _kbConcepts.filter(c => {
+    if (_kbFilter !== 'all' && c.kind !== _kbFilter) return false;
+    if (q && !c.title.toLowerCase().includes(q) && !(c.abstract || '').toLowerCase().includes(q)) return false;
+    return true;
+  });
+  list.innerHTML = filtered.map(c => {
+    const iconLetter = {ontology:'KG', paper:'📄', relationship:'🔗'}[c.kind] || '?';
+    const meta = c.entity_count ? `${c.entity_count} entities` :
+                 c.year ? `${c.year}${c.project_call ? ' · ' + c.project_call : ''}` :
+                 c.count ? `${c.count} links` : '';
+    return `
+      <div class="kb-concept-item" data-id="${c.id}" data-kind="${c.kind}" onclick="openKbArticle('${c.id}')">
+        <div class="kb-concept-icon ${c.kind}">${iconLetter}</div>
+        <div class="kb-concept-info">
+          <div class="kb-concept-title">${escapeHtml(c.title)}</div>
+          <div class="kb-concept-meta">${escapeHtml(meta)}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+function filterKbConcepts() { renderKbSidebar(); }
+function setKbFilter(btn, filter) {
+  _kbFilter = filter;
+  $$('.kb-pill').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  renderKbSidebar();
+}
+
+async function openKbArticle(conceptId) {
+  $$('.kb-concept-item').forEach(i => i.classList.remove('active'));
+  const active = document.querySelector(`.kb-concept-item[data-id="${conceptId}"]`);
+  if (active) active.classList.add('active');
+
+  const article = $('#kbArticle');
+  article.innerHTML = '<div style="padding:60px;text-align:center;color:var(--muted)">Loading article…</div>';
+
+  try {
+    const data = await fetch(`/api/knowledge-base/article/${encodeURIComponent(conceptId)}`, {credentials: 'same-origin'}).then(r => r.json());
+    if (data.type === 'ontology') {
+      renderKbOntologyArticle(article, data);
+    } else if (data.type === 'paper') {
+      renderKbPaperArticle(article, data);
+    }
+  } catch (e) {
+    article.innerHTML = `<div style="padding:40px;color:var(--muted)">Error: ${e.message}</div>`;
+  }
+}
+
+function renderKbOntologyArticle(el, data) {
+  const entities = data.entities || [];
+  const chunks = data.related_chunks || [];
+  const backlinks = [...new Set(data.backlinks || [])];
+  el.innerHTML = `
+    <div class="kb-article-header">
+      <div class="kb-breadcrumb">Knowledge Graph → ${data.title}</div>
+      <h2>${escapeHtml(data.title)}</h2>
+      <p style="color:var(--muted);font-size:13px">${entities.length} entities in the ontology · ${chunks.length} related text segments</p>
+    </div>
+    <div class="kb-article-section">
+      <h3>Entities (${entities.length})</h3>
+      ${entities.map(e => {
+        let props = {};
+        try { props = typeof e.properties === 'string' ? JSON.parse(e.properties) : (e.properties || {}); } catch(_){}
+        const propStr = Object.entries(props).slice(0, 4).map(([k,v]) => `${k.replace(/_/g,' ')}=${v}`).join(' · ');
+        return `
+          <div class="kb-entity-card" onclick="openInsDetail('${e.id}')">
+            <div class="kb-entity-badge">🔬</div>
+            <div>
+              <div class="kb-entity-name">${escapeHtml(e.name)}</div>
+              <div class="kb-entity-detail">${escapeHtml(e.vendor || '')}${propStr ? ' · ' + propStr : ''}</div>
+              <div class="kb-entity-detail" style="margin-top:2px">${e.rel_count || 0} relationships</div>
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+    ${chunks.length ? `
+    <div class="kb-article-section">
+      <h3>Related Passages</h3>
+      ${chunks.map(c => `
+        <div class="kb-chunk-ref">
+          ${escapeHtml((c.text || '').slice(0, 300))}${(c.text || '').length > 300 ? '…' : ''}
+          <div class="kb-chunk-source">Source: ${escapeHtml(c.source_title || c.project_id || '—')} · ${c.section}</div>
+        </div>
+      `).join('')}
+    </div>` : ''}
+    ${backlinks.length ? `
+    <div class="kb-article-section">
+      <h3>Backlinks</h3>
+      ${backlinks.map(b => `<span class="kb-backlink" onclick="openKbArticle('${b}')">${b.replace('concept-','').replace(/_/g,' ')}</span>`).join('')}
+    </div>` : ''}
+  `;
+}
+
+function renderKbPaperArticle(el, data) {
+  const a = data.asset || {};
+  const chunks = data.chunks || [];
+  el.innerHTML = `
+    <div class="kb-article-header">
+      <div class="kb-breadcrumb">Papers → ${a.year || '—'}</div>
+      <h2>${escapeHtml(data.title)}</h2>
+      <p style="color:var(--muted);font-size:13px">${a.category} · ${a.year || 'n.d.'} · ${a.pages || '?'} pages · ${(a.full_text_chars || 0).toLocaleString()} chars indexed</p>
+    </div>
+    ${a.funding_acknowledgment ? `
+    <div class="kb-article-section">
+      <h3>Funding Acknowledgment</h3>
+      <div class="kb-chunk-ref" style="font-style:italic">"${escapeHtml(a.funding_acknowledgment.slice(0, 400))}"</div>
+    </div>` : ''}
+    ${a.abstract ? `
+    <div class="kb-article-section">
+      <h3>Abstract / Opening Text</h3>
+      <div style="font-size:13px;line-height:1.6">${escapeHtml(a.abstract.slice(0, 600))}</div>
+    </div>` : ''}
+    ${chunks.length ? `
+    <div class="kb-article-section">
+      <h3>Indexed Content (${chunks.length} chunks)</h3>
+      ${chunks.slice(0, 6).map(c => `
+        <div class="kb-chunk-ref">
+          ${escapeHtml((c.text || '').slice(0, 250))}…
+          <div class="kb-chunk-source">Section: ${c.section} · Page ${c.page}</div>
+        </div>
+      `).join('')}
+    </div>` : ''}
+    ${data.download_url ? `
+    <div class="kb-article-section">
+      <h3>Download</h3>
+      <a href="${data.download_url}" target="_blank" class="file-card" style="display:inline-flex;text-decoration:none;color:inherit">
+        <div class="file-icon pdf">PDF</div>
+        <div class="file-meta"><div class="file-name">${escapeHtml(a.title?.slice(0,50))}</div><div class="file-desc">${((a.file_size_bytes || 0)/1024/1024).toFixed(1)} MB</div></div>
+        <div class="file-action">Open ↗</div>
+      </a>
+    </div>` : ''}
+  `;
+}
+
+async function runKbQuery() {
+  const q = $('#kbQueryInput')?.value?.trim();
+  if (!q) return;
+  const panel = $('#kbQueryResult');
+  panel.innerHTML = '<div style="padding:12px;text-align:center;color:var(--muted);font-size:12px">Querying GraphRAG…</div>';
+  try {
+    const d = await fetch('/api/graphrag', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({question: q}), credentials: 'same-origin',
+    }).then(r => r.json());
+    let html = `<div style="padding:14px;background:var(--bg);border:1px solid var(--border);border-radius:10px;font-size:13px;line-height:1.6;margin-bottom:8px">${escapeHtml(d.answer)}</div>`;
+    html += `<div style="display:flex;gap:6px;flex-wrap:wrap">`;
+    for (const c of d.citations) {
+      const color = {pdf:'#1e40af',pptx:'#ea580c',public:'#047857',narrative:'#6b7280'}[c.source_type] || '#6b7280';
+      html += `<span style="font-size:10px;padding:3px 8px;border-radius:5px;background:${color}22;color:${color};font-weight:600;cursor:pointer" title="${escapeHtml(c.snippet?.slice(0,100) || '')}">[${c.source_type}] ${escapeHtml((c.project_title || '').slice(0,30))}</span>`;
+    }
+    html += `</div>`;
+    panel.innerHTML = html;
+  } catch (e) {
+    panel.innerHTML = `<div style="color:var(--muted)">${e.message}</div>`;
+  }
+}
+
+// ═══ INSIGHTS VISUALIZER ═══
+
+let _insInitDone = false;
+let _insData = {nodes:[], edges:[]};
+let _insFilter = 'all';
+let _insView = 'grid';
+
+async function initInsights() {
+  if (_insInitDone) return;
+  _insInitDone = true;
+  try {
+    _insData = await fetch('/api/insights/graph', {credentials: 'same-origin'}).then(r => r.json());
+    renderInsights();
+  } catch (e) {
+    console.error('Insights init failed', e);
+  }
+}
+
+function renderInsights() {
+  const grid = $('#insGrid');
+  if (!grid) return;
+
+  // Count connections per node
+  const connCount = {};
+  for (const e of _insData.edges) {
+    connCount[e.source] = (connCount[e.source] || 0) + 1;
+    connCount[e.target] = (connCount[e.target] || 0) + 1;
+  }
+
+  let nodes = _insData.nodes || [];
+  if (_insFilter !== 'all') {
+    nodes = nodes.filter(n => n.group === _insFilter);
+  }
+
+  // Sort by connection count (most connected first)
+  nodes.sort((a, b) => (connCount[b.id] || 0) - (connCount[a.id] || 0));
+
+  if (_insView === 'clusters') {
+    // Group by type
+    const groups = {};
+    for (const n of nodes) {
+      const g = n.group;
+      if (!groups[g]) groups[g] = [];
+      groups[g].push(n);
+    }
+    let html = '';
+    for (const [group, items] of Object.entries(groups)) {
+      html += `<div style="grid-column:1/-1;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);padding:10px 0 4px;border-bottom:1px solid var(--border);margin-top:8px">${group} (${items.length})</div>`;
+      html += items.map(n => renderInsNode(n, connCount)).join('');
+    }
+    grid.innerHTML = html;
+  } else if (_insView === 'papers') {
+    const papers = nodes.filter(n => n.group === 'paper');
+    grid.innerHTML = papers.map(n => renderInsNode(n, connCount)).join('');
+  } else {
+    grid.innerHTML = nodes.map(n => renderInsNode(n, connCount)).join('');
+  }
+
+  const countEl = $('#insNodeCount');
+  if (countEl) countEl.textContent = `${nodes.length} nodes · ${_insData.edges.length} edges`;
+}
+
+function renderInsNode(n, connCount) {
+  const conns = connCount[n.id] || 0;
+  const meta = n.vendor ? n.vendor :
+               n.year ? `${n.year}${n.pc ? ' · ' + n.pc : ''}` :
+               n.subtype ? n.subtype.replace(/_/g, ' ') : '';
+  return `
+    <div class="ins-node ${n.group}" onclick="openInsDetail('${n.id}')" title="${escapeHtml(n.label)}">
+      <div class="ins-node-type">
+        <span style="width:8px;height:8px;border-radius:50%;display:inline-block;background:currentColor"></span>
+        ${n.group} ${n.subtype && n.subtype !== n.group ? '· ' + n.subtype.replace(/_/g,' ') : ''}
+      </div>
+      <div class="ins-node-label">${escapeHtml(n.label)}</div>
+      <div class="ins-node-meta">${escapeHtml(meta)}</div>
+      ${conns > 0 ? `<div class="ins-node-connections">${conns} ↔</div>` : ''}
+    </div>
+  `;
+}
+
+function setInsFilter(btn, filter) {
+  _insFilter = filter;
+  $$('.ins-pill').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  renderInsights();
+}
+function setInsView(btn, view) {
+  _insView = view;
+  $$('.ins-view-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderInsights();
+}
+
+async function openInsDetail(nodeId) {
+  const detail = $('#insDetail');
+  const content = $('#insDetailContent');
+  if (!detail || !content) return;
+  detail.classList.remove('hidden');
+
+  const node = _insData.nodes.find(n => n.id === nodeId);
+  if (!node) { content.innerHTML = '<p>Node not found</p>'; return; }
+
+  // Find connected nodes
+  const connected = [];
+  for (const e of _insData.edges) {
+    if (e.source === nodeId) {
+      const t = _insData.nodes.find(n => n.id === e.target);
+      if (t) connected.push({node: t, rel: e.type, direction: '→'});
+    }
+    if (e.target === nodeId) {
+      const s = _insData.nodes.find(n => n.id === e.source);
+      if (s) connected.push({node: s, rel: e.type, direction: '←'});
+    }
+  }
+
+  // Check if it's a public asset (paper, patent, etc.) — offer download
+  let downloadSection = '';
+  if (node.group === 'paper' && node.has_file) {
+    downloadSection = `
+      <div style="margin-top:16px">
+        <a href="/api/public-dataset/${encodeURIComponent(nodeId)}/download" target="_blank"
+           class="file-card" style="display:flex;text-decoration:none;color:inherit">
+          <div class="file-icon pdf">PDF</div>
+          <div class="file-meta"><div class="file-name">Download source document</div><div class="file-desc">Click to open</div></div>
+          <div class="file-action">Open ↗</div>
+        </a>
+      </div>
+    `;
+  } else if (node.group === 'project') {
+    downloadSection = `
+      <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <a href="/api/projects/${encodeURIComponent(nodeId)}/files/pdf" target="_blank"
+           class="file-card" style="display:flex;text-decoration:none;color:inherit;padding:10px 12px">
+          <div class="file-icon pdf" style="width:32px;height:32px;font-size:9px">PDF</div>
+          <div class="file-meta"><div class="file-name">Final Report</div></div>
+        </a>
+        <a href="/api/projects/${encodeURIComponent(nodeId)}/files/pptx" target="_blank"
+           class="file-card" style="display:flex;text-decoration:none;color:inherit;padding:10px 12px">
+          <div class="file-icon pptx" style="width:32px;height:32px;font-size:9px">PPT</div>
+          <div class="file-meta"><div class="file-name">Briefing</div></div>
+        </a>
+      </div>
+    `;
+  }
+
+  content.innerHTML = `
+    <div style="margin-bottom:16px">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;color:${
+        {material:'#4f46e5',process:'#059669',performance:'#d97706',paper:'#7c3aed',project:'#0891b2'}[node.group] || 'var(--muted)'
+      }">${node.group} · ${(node.subtype || '').replace(/_/g,' ')}</div>
+      <h2 style="margin:0 0 8px;font-size:18px;line-height:1.3">${escapeHtml(node.label)}</h2>
+      ${node.vendor ? `<div style="font-size:12px;color:var(--muted)">Vendor: ${escapeHtml(node.vendor)}</div>` : ''}
+      ${node.year ? `<div style="font-size:12px;color:var(--muted)">Year: ${node.year}${node.pc ? ' · ' + node.pc : ''}</div>` : ''}
+    </div>
+
+    ${downloadSection}
+
+    ${connected.length ? `
+    <div style="margin-top:20px">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)">
+        Connected Nodes (${connected.length})
+      </div>
+      ${connected.slice(0, 20).map(c => `
+        <div onclick="openInsDetail('${c.node.id}')" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;cursor:pointer;margin-bottom:4px;transition:all .12s;font-size:12px" onmouseover="this.style.background='rgba(10,143,143,.05)'" onmouseout="this.style.background='transparent'">
+          <span style="font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;min-width:20px">${c.direction}</span>
+          <span style="width:6px;height:6px;border-radius:50%;background:${
+            {material:'#4f46e5',process:'#059669',performance:'#d97706',paper:'#7c3aed',project:'#0891b2'}[c.node.group] || '#6b7280'
+          };flex-shrink:0"></span>
+          <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(c.node.label)}</span>
+          <span style="font-size:10px;color:var(--muted)">${c.rel.replace(/_/g,' ')}</span>
+        </div>
+      `).join('')}
+    </div>` : '<div style="padding:20px;color:var(--muted);font-size:12px">No direct connections in the knowledge graph.</div>'}
+
+    <div style="margin-top:20px">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px">Query about this entity</div>
+      <button onclick="document.querySelector('.nav-btn[data-view=knowledge]').click(); setTimeout(() => { document.getElementById('kbQueryInput').value = '${escapeHtml(node.label.replace(/'/g, ''))}'; runKbQuery(); }, 500);"
+        style="padding:8px 16px;border-radius:8px;border:1px solid var(--teal);background:transparent;color:var(--teal);font-size:12px;font-weight:600;cursor:pointer;transition:all .12s"
+        onmouseover="this.style.background='rgba(10,143,143,.08)'" onmouseout="this.style.background='transparent'">
+        Ask Knowledge Base about "${escapeHtml(node.label.slice(0,30))}" →
+      </button>
+    </div>
+  `;
+}
+
+function closeInsDetail() {
+  const d = $('#insDetail');
+  if (d) d.classList.add('hidden');
+}
+
 window.filterPubBy = filterPubBy;
 window.loadPublicAssets = loadPublicAssets;
 window.openAssetModal = openAssetModal;
+window.initKnowledgeBase = initKnowledgeBase;
+window.openKbArticle = openKbArticle;
+window.filterKbConcepts = filterKbConcepts;
+window.setKbFilter = setKbFilter;
+window.runKbQuery = runKbQuery;
+window.initInsights = initInsights;
+window.setInsFilter = setInsFilter;
+window.setInsView = setInsView;
+window.openInsDetail = openInsDetail;
+window.closeInsDetail = closeInsDetail;
 
 // Expose to global so manager dashboard inline handlers can navigate via parent window when needed
 window.filterByDistrict = filterByDistrict;

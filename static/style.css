@@ -467,3 +467,68 @@ a:hover{text-decoration:underline}
   white-space:nowrap; padding-top:4px;
 }
 .asset-action.disabled{color:var(--muted); opacity:.5}
+
+/* ─── LLM KNOWLEDGE BASE ─── */
+.kb-header{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:18px}
+.kb-layout{display:grid;grid-template-columns:320px 1fr;gap:0;border:1px solid var(--border);border-radius:12px;overflow:hidden;min-height:600px;background:var(--card)}
+@media(max-width:900px){.kb-layout{grid-template-columns:1fr}}
+.kb-sidebar{border-right:1px solid var(--border);background:var(--bg);overflow-y:auto;max-height:700px}
+.kb-concept-list{padding:8px}
+.kb-concept-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;transition:all .12s;margin-bottom:2px;font-size:12px}
+.kb-concept-item:hover{background:rgba(10,143,143,.06)}
+.kb-concept-item.active{background:rgba(10,143,143,.1);border-left:3px solid var(--teal)}
+.kb-concept-icon{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;font-family:'JetBrains Mono',monospace}
+.kb-concept-icon.ontology{background:linear-gradient(135deg,#1e40af,#312e81)}
+.kb-concept-icon.paper{background:linear-gradient(135deg,#047857,#065f46)}
+.kb-concept-icon.relationship{background:linear-gradient(135deg,#b45309,#92400e)}
+.kb-concept-info{flex:1;min-width:0}
+.kb-concept-title{font-weight:600;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kb-concept-meta{font-size:10px;color:var(--muted)}
+.kb-pill{padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:10px;font-weight:600;cursor:pointer;transition:all .12s}
+.kb-pill.active{background:var(--teal);color:#fff;border-color:var(--teal)}
+.kb-main{display:flex;flex-direction:column}
+.kb-article{flex:1;padding:24px;overflow-y:auto;max-height:540px}
+.kb-welcome{text-align:center;padding:80px 20px;color:var(--text)}
+.kb-query-panel{padding:16px 24px;border-top:1px solid var(--border);background:var(--bg)}
+.kb-article-header{margin-bottom:18px}
+.kb-article-header h2{margin:0 0 6px;font-size:20px;letter-spacing:-.02em}
+.kb-article-header .kb-breadcrumb{font-size:11px;color:var(--muted)}
+.kb-article-section{margin-bottom:18px}
+.kb-article-section h3{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--teal);margin:0 0 10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.kb-entity-card{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;background:var(--bg);border:1px solid var(--border);border-radius:8px;margin-bottom:8px;cursor:pointer;transition:all .12s}
+.kb-entity-card:hover{border-color:var(--teal);transform:translateX(2px)}
+.kb-entity-badge{width:38px;height:38px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;background:rgba(10,143,143,.08)}
+.kb-entity-name{font-size:13px;font-weight:600;margin-bottom:2px}
+.kb-entity-detail{font-size:11px;color:var(--muted)}
+.kb-chunk-ref{padding:10px 14px;background:var(--bg);border-left:3px solid var(--teal);border-radius:0 8px 8px 0;margin-bottom:8px;font-size:12px;line-height:1.5;color:var(--text)}
+.kb-chunk-source{font-size:10px;color:var(--muted);margin-top:4px}
+.kb-backlink{display:inline-block;padding:3px 10px;background:rgba(99,102,241,.08);color:var(--purple);border-radius:6px;font-size:11px;font-weight:600;margin:3px 4px 3px 0;cursor:pointer;transition:all .12s}
+.kb-backlink:hover{background:rgba(99,102,241,.15)}
+
+/* ─── INSIGHTS VISUALIZER ─── */
+.ins-filter-bar{display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.ins-pill{padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:11px;font-weight:600;cursor:pointer;transition:all .12s}
+.ins-pill.active{background:var(--teal);color:#fff;border-color:var(--teal)}
+.ins-view-btn{padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:11px;font-weight:600;cursor:pointer}
+.ins-view-btn.active{background:rgba(10,143,143,.1);color:var(--teal);border-color:var(--teal)}
+.ins-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
+.ins-node{padding:14px 16px;background:var(--card);border:1.5px solid var(--border);border-radius:10px;cursor:pointer;transition:all .15s;position:relative;overflow:hidden}
+.ins-node:hover{border-color:var(--teal);transform:translateY(-2px);box-shadow:0 8px 20px rgba(10,143,143,.1)}
+.ins-node::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.ins-node.material::before{background:linear-gradient(90deg,#1e40af,#6366f1)}
+.ins-node.process::before{background:linear-gradient(90deg,#047857,#10b981)}
+.ins-node.performance::before{background:linear-gradient(90deg,#b45309,#f59e0b)}
+.ins-node.paper::before{background:linear-gradient(90deg,#7c3aed,#a78bfa)}
+.ins-node.project::before{background:linear-gradient(90deg,#0891b2,#22d3ee)}
+.ins-node-type{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.ins-node.material .ins-node-type{color:#4f46e5}
+.ins-node.process .ins-node-type{color:#059669}
+.ins-node.performance .ins-node-type{color:#d97706}
+.ins-node.paper .ins-node-type{color:#7c3aed}
+.ins-node.project .ins-node-type{color:#0891b2}
+.ins-node-label{font-size:13px;font-weight:600;margin-bottom:4px;line-height:1.3}
+.ins-node-meta{font-size:10px;color:var(--muted)}
+.ins-node-connections{position:absolute;top:10px;right:12px;font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+.ins-detail{position:fixed;top:0;right:0;width:480px;height:100vh;background:var(--card);border-left:1px solid var(--border);box-shadow:-8px 0 32px rgba(0,0,0,.15);z-index:100;overflow-y:auto;padding:24px;transition:transform .25s}
+.ins-detail.hidden{transform:translateX(100%)}
+.ins-detail-close{position:absolute;top:16px;right:16px;width:32px;height:32px;border-radius:6px;border:1px solid var(--border);background:transparent;cursor:pointer;font-size:18px;color:var(--muted);display:flex;align-items:center;justify-content:center}

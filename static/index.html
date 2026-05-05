@@ -24,6 +24,8 @@
       <button class="nav-btn" data-view="projects">Projects</button>
       <button class="nav-btn" data-view="institutions">Institutions</button>
       <button class="nav-btn" data-view="public">Public Dataset</button>
+      <button class="nav-btn" data-view="knowledge">Knowledge Base</button>
+      <button class="nav-btn" data-view="insights">Insights</button>
       <button class="nav-btn" data-view="search">Search</button>
       <a class="nav-btn manager-link" href="/manager" title="Open the Secure AI/ML Program Manager dashboard">
         ★ Manager Dashboard
@@ -120,6 +122,91 @@
         </thead>
         <tbody></tbody>
       </table>
+    </div>
+  </section>
+
+  <!-- ─── LLM KNOWLEDGE BASE VIEW ─── -->
+  <section id="view-knowledge" class="view">
+    <div class="kb-header">
+      <div>
+        <h2 style="margin:0 0 4px 0;font-size:22px;letter-spacing:-.02em">LLM Knowledge Base</h2>
+        <p style="margin:0;color:var(--muted);font-size:13px">Auto-compiled wiki from 56 public assets + 390 projects + 830 knowledge-graph entities. Query, explore, and discover connections.</p>
+      </div>
+      <span class="pub-badge" style="background:linear-gradient(135deg,rgba(99,102,241,.12),rgba(168,85,247,.12));color:#7c3aed;border-color:rgba(99,102,241,.25)">
+        AI-compiled · auto-linked
+      </span>
+    </div>
+
+    <div class="kb-layout">
+      <!-- Sidebar: concept index -->
+      <div class="kb-sidebar">
+        <div style="padding:12px 14px;border-bottom:1px solid var(--border)">
+          <input type="text" id="kbSearchInput" placeholder="Search concepts…" style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:12px;background:var(--bg);color:var(--text);font-family:inherit" oninput="filterKbConcepts()" />
+        </div>
+        <div class="kb-filter-pills" style="padding:8px 14px;display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--border)">
+          <button class="kb-pill active" onclick="setKbFilter(this,'all')">All</button>
+          <button class="kb-pill" onclick="setKbFilter(this,'ontology')">Ontology</button>
+          <button class="kb-pill" onclick="setKbFilter(this,'paper')">Papers</button>
+          <button class="kb-pill" onclick="setKbFilter(this,'relationship')">Relationships</button>
+        </div>
+        <div id="kbConceptList" class="kb-concept-list"></div>
+      </div>
+
+      <!-- Main: article view -->
+      <div class="kb-main">
+        <div id="kbArticle" class="kb-article">
+          <div class="kb-welcome">
+            <div style="font-size:48px;margin-bottom:12px">📚</div>
+            <div style="font-size:18px;font-weight:700;margin-bottom:8px">Select a concept from the sidebar</div>
+            <div style="color:var(--muted);font-size:13px;max-width:400px;margin:0 auto;line-height:1.6">
+              The knowledge base auto-compiles wiki articles from your indexed corpus.
+              Each concept links to source documents, related entities, and cross-references.
+            </div>
+          </div>
+        </div>
+        <!-- Query panel -->
+        <div class="kb-query-panel">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px">Ask the Knowledge Base</div>
+          <div style="display:flex;gap:10px">
+            <input type="text" id="kbQueryInput" placeholder="e.g. What sintering protocols give the lowest surface roughness?" style="flex:1;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--bg);color:var(--text);font-family:inherit" />
+            <button class="btn-primary" onclick="runKbQuery()">Ask →</button>
+          </div>
+          <div id="kbQueryResult" style="margin-top:12px"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── INSIGHTS VISUALIZER VIEW ─── -->
+  <section id="view-insights" class="view">
+    <div class="kb-header">
+      <div>
+        <h2 style="margin:0 0 4px 0;font-size:22px;letter-spacing:-.02em">Deeper Insights Visualizer</h2>
+        <p style="margin:0;color:var(--muted);font-size:13px">Interactive exploration of connections between materials, processes, performance outcomes, papers, and projects. Click any node to drill into source documents.</p>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="ins-view-btn active" data-insview="grid" onclick="setInsView(this,'grid')">Grid</button>
+        <button class="ins-view-btn" data-insview="clusters" onclick="setInsView(this,'clusters')">Clusters</button>
+        <button class="ins-view-btn" data-insview="papers" onclick="setInsView(this,'papers')">Papers</button>
+      </div>
+    </div>
+
+    <div class="ins-filter-bar">
+      <button class="ins-pill active" onclick="setInsFilter(this,'all')">All</button>
+      <button class="ins-pill" onclick="setInsFilter(this,'material')">Materials</button>
+      <button class="ins-pill" onclick="setInsFilter(this,'process')">Processes</button>
+      <button class="ins-pill" onclick="setInsFilter(this,'performance')">Performance</button>
+      <button class="ins-pill" onclick="setInsFilter(this,'paper')">Papers</button>
+      <button class="ins-pill" onclick="setInsFilter(this,'project')">Projects</button>
+      <span style="margin-left:auto;font-size:11px;color:var(--muted)" id="insNodeCount"></span>
+    </div>
+
+    <div id="insGrid" class="ins-grid"></div>
+
+    <!-- Detail panel (slides in on node click) -->
+    <div id="insDetail" class="ins-detail hidden">
+      <button class="ins-detail-close" onclick="closeInsDetail()">×</button>
+      <div id="insDetailContent"></div>
     </div>
   </section>
 
